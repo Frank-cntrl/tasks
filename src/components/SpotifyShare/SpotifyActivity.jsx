@@ -73,7 +73,7 @@ function SpotifyActivity({ user, connected, onConnect }) {
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-2">Connect Spotify</h3>
           <p className="text-gray-500 text-sm mb-4">
-            Connect your Spotify account to see what you and your partner are listening to!
+            Connect your Spotify account!
           </p>
           <button
             onClick={onConnect}
