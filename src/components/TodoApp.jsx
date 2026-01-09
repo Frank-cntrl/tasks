@@ -3,11 +3,11 @@ import TodoList from './TodoList'
 import AddListModal from './AddListModal'
 import AddTaskModal from './AddTaskModal'
 import { API_URL } from '../config'
-import LogoutIcon from '@mui/icons-material/Logout'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import AddIcon from '@mui/icons-material/Add'
-import FavoriteIcon from '@mui/icons-material/Favorite'
+import ChecklistIcon from '@mui/icons-material/Checklist'
 
-function TodoApp({ user, onLogout }) {
+function TodoApp({ user, onLogout, onBack }) {
   const [activeTab, setActiveTab] = useState('my')
   const [todolists, setTodolists] = useState([])
   const [loading, setLoading] = useState(true)
@@ -105,22 +105,20 @@ function TodoApp({ user, onLogout }) {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <header className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-5 py-6 shadow-lg">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <FavoriteIcon className="text-pink-300" />
-            <h1 className="text-3xl font-bold">Frella</h1>
-          </div>
+      <header className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-4 shadow-lg">
+        <div className="flex items-center gap-3">
           <button
-            onClick={onLogout}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 
-                     rounded-xl text-sm font-medium transition-all duration-200"
+            onClick={onBack}
+            className="w-10 h-10 flex items-center justify-center rounded-xl 
+                     bg-white/20 hover:bg-white/30 transition-all duration-200"
           >
-            <LogoutIcon fontSize="small" />
-            <span>Logout</span>
+            <ArrowBackIcon />
           </button>
+          <div className="flex items-center gap-2">
+            <ChecklistIcon />
+            <h1 className="text-xl font-bold">To-Do Lists</h1>
+          </div>
         </div>
-        <p className="text-purple-100 text-sm">Welcome, {user.username}!</p>
       </header>
 
       {/* Tabs */}

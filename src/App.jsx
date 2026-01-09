@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react'
 import PinLogin from './components/PinLogin'
+import NavigationHub from './components/NavigationHub'
 import TodoApp from './components/TodoApp'
+import SpotifyShare from './components/SpotifyShare/SpotifyShare'
+import Messages from './components/Messages'
+import SharedDocsPlaceholder from './components/SharedDocsPlaceholder'
+import GamesPlaceholder from './components/GamesPlaceholder'
 import { API_URL } from './config'
 
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [currentView, setCurrentView] = useState('hub')
 
   useEffect(() => {
-    // Check if user is already logged in
     checkAuth()
   }, [])
 
@@ -32,6 +37,7 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData)
+    setCurrentView('hub')
   }
 
   const handleLogout = async () => {
@@ -41,9 +47,18 @@ function App() {
         credentials: 'include',
       })
       setUser(null)
+      setCurrentView('hub')
     } catch (error) {
       console.error('Logout failed:', error)
     }
+  }
+
+  const handleNavigate = (view) => {
+    setCurrentView(view)
+  }
+
+  const handleBackToHub = () => {
+    setCurrentView('hub')
   }
 
   if (loading) {
@@ -54,13 +69,36 @@ function App() {
     )
   }
 
+  if (!user) {
+    return <PinLogin onLogin={handleLogin} />
+  }
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'todo':
+        return <TodoApp user={user} onLogout={handleLogout} onBack={handleBackToHub} />
+      case 'spotify':
+        return <SpotifyShare user={user} onBack={handleBackToHub} />
+      case 'messages':
+        return <Messages user={user} onBack={handleBackToHub} />
+      case 'documents':
+        return <SharedDocsPlaceholder onBack={handleBackToHub} />
+      case 'games':
+        return <GamesPlaceholder onBack={handleBackToHub} />
+      default:
+        return (
+          <NavigationHub 
+            user={user} 
+            onLogout={handleLogout} 
+            onNavigate={handleNavigate} 
+          />
+        )
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {user ? (
-        <TodoApp user={user} onLogout={handleLogout} />
-      ) : (
-        <PinLogin onLogin={handleLogin} />
-      )}
+      {renderCurrentView()}
     </div>
   )
 }
