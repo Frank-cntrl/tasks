@@ -11,11 +11,19 @@ import { API_URL } from './config'
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [currentView, setCurrentView] = useState('hub')
+  const [currentView, setCurrentView] = useState(() => {
+    // Restore view from localStorage on initial load
+    return localStorage.getItem('currentView') || 'hub'
+  })
 
   useEffect(() => {
     checkAuth()
   }, [])
+
+  // Persist current view to localStorage
+  useEffect(() => {
+    localStorage.setItem('currentView', currentView)
+  }, [currentView])
 
   const checkAuth = async () => {
     try {
@@ -48,6 +56,7 @@ function App() {
       })
       setUser(null)
       setCurrentView('hub')
+      localStorage.removeItem('currentView')
     } catch (error) {
       console.error('Logout failed:', error)
     }

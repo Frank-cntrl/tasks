@@ -18,6 +18,7 @@ function Messages({ user, onBack }) {
   const [partnerTyping, setPartnerTyping] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
   const [imageFile, setImageFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
   
   const socketRef = useRef(null)
   const messagesEndRef = useRef(null)
@@ -29,7 +30,7 @@ function Messages({ user, onBack }) {
 
   useEffect(() => {
     fetchMessages()
-    connectSocket()
+    initSocket()
 
     return () => {
       if (socketRef.current) {
@@ -37,6 +38,23 @@ function Messages({ user, onBack }) {
       }
     }
   }, [])
+
+  const initSocket = async () => {
+    try {
+      // Fetch socket token from backend
+      const response = await fetch(`${API_URL}/auth/socket-token`, {
+        credentials: 'include',
+      })
+      if (response.ok) {
+        const data = await response.json()
+        connectSocket(data.token)
+      } else {
+        console.error('Failed to get socket token')
+      }
+    } catch (error) {
+      console.error('Error getting socket token:', error)
+    }
+  }
 
   useEffect(() => {
     scrollToBottom()
@@ -58,16 +76,16 @@ function Messages({ user, onBack }) {
     }
   }
 
-  const connectSocket = () => {
-    // Get auth token from cookie or generate one
-    const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('token='))
-      ?.split('=')[1]
+  const connectSocket = (token) => {
+    if (!token) {
+      console.error('No token provided for socket connection')
+      return
+    }
 
     socketRef.current = io(API_URL, {
       auth: { token },
       withCredentials: true,
+      transports: ['websocket', 'polling'],
     })
 
     socketRef.current.on('connect', () => {
@@ -121,21 +139,54 @@ function Messages({ user, onBack }) {
     socketRef.current.on('error', (error) => {
       console.error('Socket error:', error)
     })
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('Socket connection error:', error.message)
+      setConnected(false)
+    })
   }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', 'frella_messages') // Create this preset in Cloudinary
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      )
+      const data = await response.json()
+      return data.secure_url
+    } catch (error) {
+      console.error('Cloudinary upload error:', error)
+      return null
+    }
+  }
+
   const handleSend = async () => {
     if (!newMessage.trim() && !imagePreview) return
+    if (uploading) return
 
     let imageUrl = null
 
-    // If there's an image, upload it first (placeholder for Cloudinary)
+    // Upload image to Cloudinary if present
     if (imageFile) {
-      // For now, convert to base64 (in production, use Cloudinary)
-      imageUrl = imagePreview
+      setUploading(true)
+      imageUrl = await uploadToCloudinary(imageFile)
+      setUploading(false)
+      
+      if (!imageUrl && !newMessage.trim()) {
+        alert('Failed to upload image')
+        return
+      }
     }
 
     socketRef.current.emit('send_message', {
@@ -344,8 +395,10 @@ function Messages({ user, onBack }) {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
             className="w-10 h-10 flex items-center justify-center rounded-xl 
-                     bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                     bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors
+                     disabled:opacity-50"
           >
             <ImageIcon />
           </button>
@@ -353,19 +406,25 @@ function Messages({ user, onBack }) {
             type="text"
             value={newMessage}
             onChange={handleTyping}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && !uploading && handleSend()}
             placeholder="Type a message..."
+            disabled={uploading}
             className="flex-1 px-4 py-3 bg-gray-100 rounded-xl 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     focus:outline-none focus:ring-2 focus:ring-blue-500
+                     disabled:opacity-50"
           />
           <button
             onClick={handleSend}
-            disabled={!newMessage.trim() && !imagePreview}
+            disabled={uploading || (!newMessage.trim() && !imagePreview)}
             className="w-10 h-10 flex items-center justify-center rounded-xl 
                      bg-blue-500 hover:bg-blue-600 text-white transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <SendIcon />
+            {uploading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <SendIcon />
+            )}
           </button>
         </div>
       </div>
