@@ -9,6 +9,7 @@ import DoneIcon from '@mui/icons-material/Done'
 import CloseIcon from '@mui/icons-material/Close'
 import { API_URL } from '../config'
 import { uploadImage, validateImage } from '../utils/upload'
+import { authFetch } from '../utils/api'
 
 function Messages({ user, onBack }) {
   const [messages, setMessages] = useState([])
@@ -43,14 +44,16 @@ function Messages({ user, onBack }) {
   const initSocket = async () => {
     try {
       // Fetch socket token from backend
-      const response = await fetch(`${API_URL}/auth/socket-token`, {
-        credentials: 'include',
-      })
+      console.log('Fetching socket token...')
+      const response = await authFetch('/auth/socket-token')
+      console.log('Socket token response status:', response.status)
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ Got socket token')
         connectSocket(data.token)
       } else {
-        console.error('Failed to get socket token')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to get socket token:', response.status, errorData)
       }
     } catch (error) {
       console.error('Error getting socket token:', error)
@@ -63,12 +66,16 @@ function Messages({ user, onBack }) {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/messages`, {
-        credentials: 'include',
-      })
+      console.log('Fetching messages from:', `${API_URL}/api/messages`)
+      const response = await authFetch('/api/messages')
+      console.log('Messages response status:', response.status)
       if (response.ok) {
         const data = await response.json()
+        console.log('Fetched messages:', data.length)
         setMessages(data)
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to fetch messages:', response.status, response.statusText, errorData)
       }
     } catch (error) {
       console.error('Failed to fetch messages:', error)
@@ -83,18 +90,25 @@ function Messages({ user, onBack }) {
       return
     }
 
+    console.log('Connecting to socket at:', API_URL)
+
     socketRef.current = io(API_URL, {
       auth: { token },
       withCredentials: true,
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     })
 
     socketRef.current.on('connect', () => {
+      console.log('✅ Socket connected!')
       setConnected(true)
       socketRef.current.emit('join_chat')
     })
 
-    socketRef.current.on('disconnect', () => {
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('❌ Socket disconnected:', reason)
       setConnected(false)
     })
 
@@ -154,6 +168,11 @@ function Messages({ user, onBack }) {
   const handleSend = async () => {
     if (!newMessage.trim() && !imagePreview) return
     if (uploading) return
+    
+    if (!socketRef.current || !connected) {
+      alert('Not connected to chat server. Please wait...')
+      return
+    }
 
     let imageUrl = null
 
@@ -170,6 +189,7 @@ function Messages({ user, onBack }) {
       try {
         const result = await uploadImage(imageFile, 'messages')
         imageUrl = result.url
+        console.log('Image uploaded:', imageUrl)
       } catch (error) {
         console.error('Upload error:', error)
         alert('Failed to upload image: ' + error.message)
@@ -179,6 +199,7 @@ function Messages({ user, onBack }) {
       setUploading(false)
     }
 
+    console.log('Sending message via socket...')
     socketRef.current.emit('send_message', {
       content: newMessage.trim() || null,
       imageUrl,
@@ -190,7 +211,9 @@ function Messages({ user, onBack }) {
     setImageFile(null)
     
     // Stop typing indicator
-    socketRef.current.emit('stop_typing')
+    if (socketRef.current) {
+      socketRef.current.emit('stop_typing')
+    }
   }
 
   const handleTyping = (e) => {

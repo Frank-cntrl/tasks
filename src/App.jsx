@@ -7,6 +7,7 @@ import Messages from './components/Messages'
 import SharedDocsPlaceholder from './components/SharedDocsPlaceholder'
 import GamesPlaceholder from './components/GamesPlaceholder'
 import { API_URL } from './config'
+import { authFetch, clearAuthToken } from './utils/api'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -27,9 +28,7 @@ function App() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/me`, {
-        credentials: 'include',
-      })
+      const response = await authFetch('/auth/me')
       if (response.ok) {
         const data = await response.json()
         if (data.user) {
@@ -50,13 +49,11 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      })
+      await authFetch('/auth/logout', { method: 'POST' })
       setUser(null)
       setCurrentView('hub')
       localStorage.removeItem('currentView')
+      clearAuthToken() // Clear the stored token
     } catch (error) {
       console.error('Logout failed:', error)
     }

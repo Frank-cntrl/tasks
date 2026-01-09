@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { API_URL } from '../config'
+import { saveAuthToken } from '../utils/api'
 import BackspaceIcon from '@mui/icons-material/Backspace'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 
@@ -42,6 +43,11 @@ function PinLogin({ onLogin }) {
       const data = await response.json()
 
       if (response.ok) {
+        // Save token to localStorage for mobile compatibility
+        if (data.token) {
+          saveAuthToken(data.token)
+          console.log('✅ Token saved to localStorage')
+        }
         onLogin(data.user)
       } else {
         setError(data.error || 'Invalid PIN')
