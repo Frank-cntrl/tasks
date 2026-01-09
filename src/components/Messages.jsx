@@ -8,6 +8,7 @@ import DoneAllIcon from '@mui/icons-material/DoneAll'
 import DoneIcon from '@mui/icons-material/Done'
 import CloseIcon from '@mui/icons-material/Close'
 import { API_URL } from '../config'
+import { uploadImage, validateImage } from '../utils/upload'
 
 function Messages({ user, onBack }) {
   const [messages, setMessages] = useState([])
@@ -150,43 +151,32 @@ function Messages({ user, onBack }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const uploadToCloudinary = async (file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('upload_preset', 'frella_messages') // Create this preset in Cloudinary
-
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      )
-      const data = await response.json()
-      return data.secure_url
-    } catch (error) {
-      console.error('Cloudinary upload error:', error)
-      return null
-    }
-  }
-
   const handleSend = async () => {
     if (!newMessage.trim() && !imagePreview) return
     if (uploading) return
 
     let imageUrl = null
 
-    // Upload image to Cloudinary if present
+    // Upload image via backend to Cloudinary if present
     if (imageFile) {
-      setUploading(true)
-      imageUrl = await uploadToCloudinary(imageFile)
-      setUploading(false)
-      
-      if (!imageUrl && !newMessage.trim()) {
-        alert('Failed to upload image')
+      // Validate image first
+      const validation = validateImage(imageFile)
+      if (!validation.valid) {
+        alert(validation.error)
         return
       }
+
+      setUploading(true)
+      try {
+        const result = await uploadImage(imageFile, 'messages')
+        imageUrl = result.url
+      } catch (error) {
+        console.error('Upload error:', error)
+        alert('Failed to upload image: ' + error.message)
+        setUploading(false)
+        return
+      }
+      setUploading(false)
     }
 
     socketRef.current.emit('send_message', {
