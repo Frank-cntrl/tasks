@@ -1,42 +1,35 @@
-/* Global Reset */
-*, *::before, *::after {
-  box-sizing: border-box;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom animations */
+@keyframes shake {
+  0%, 100% { 
+    transform: translateX(0); 
+  }
+  25% { 
+    transform: translateX(-10px); 
+  }
+  75% { 
+    transform: translateX(10px); 
+  }
 }
 
-* {
-  margin: 0;
-  padding: 0;
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
+.animate-shake {
+  animation: shake 0.4s ease;
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-img, picture, video, canvas, svg {
-  display: block;
-  max-width: 100%;
-}
-
-input, button, textarea, select {
-  font: inherit;
-}
-
-p, h1, h2, h3, h4, h5, h6 {
-  overflow-wrap: break-word;
-}
-
-button {
-  cursor: pointer;
-}
-
-#root {
-  min-height: 100vh;
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }

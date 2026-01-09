@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import PinLogin from './components/PinLogin'
 import TodoApp from './components/TodoApp'
-import './App.css'
+import { API_URL } from './config'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -14,7 +14,7 @@ function App() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('http://localhost:8080/auth/me', {
+      const response = await fetch(`${API_URL}/auth/me`, {
         credentials: 'include',
       })
       if (response.ok) {
@@ -36,7 +36,7 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:8080/auth/logout', {
+      await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       })
@@ -48,14 +48,14 @@ function App() {
 
   if (loading) {
     return (
-      <div className="loading-screen">
-        <div className="spinner"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-purple-900">
+        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="app">
+    <div className="min-h-screen bg-gray-50">
       {user ? (
         <TodoApp user={user} onLogout={handleLogout} />
       ) : (
