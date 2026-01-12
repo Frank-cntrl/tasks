@@ -29,8 +29,8 @@ const navigationItems = [
     color: 'from-blue-500 to-blue-600',
   },
   {
-    id: 'documents',
-    name: 'Collab Board',
+    id: 'boards',
+    name: 'Collab Boards',
     icon: BrushIcon,
     enabled: true,
     color: 'from-yellow-500 to-yellow-600',

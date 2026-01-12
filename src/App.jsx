@@ -4,6 +4,7 @@ import NavigationHub from './components/NavigationHub'
 import TodoApp from './components/TodoApp'
 import SpotifyShare from './components/SpotifyShare/SpotifyShare'
 import Messages from './components/Messages'
+import BoardSelector from './components/BoardSelector'
 import CollaborativeBoard from './components/CollaborativeBoard'
 import GamesPlaceholder from './components/GamesPlaceholder'
 import { API_URL } from './config'
@@ -16,6 +17,11 @@ function App() {
     // Restore view from localStorage on initial load
     return localStorage.getItem('currentView') || 'hub'
   })
+  const [selectedBoard, setSelectedBoard] = useState(() => {
+    // Restore selected board from localStorage
+    const saved = localStorage.getItem('selectedBoard')
+    return saved ? JSON.parse(saved) : null
+  })
 
   useEffect(() => {
     checkAuth()
@@ -25,6 +31,15 @@ function App() {
   useEffect(() => {
     localStorage.setItem('currentView', currentView)
   }, [currentView])
+
+  // Persist selected board to localStorage
+  useEffect(() => {
+    if (selectedBoard) {
+      localStorage.setItem('selectedBoard', JSON.stringify(selectedBoard))
+    } else {
+      localStorage.removeItem('selectedBoard')
+    }
+  }, [selectedBoard])
 
   const checkAuth = async () => {
     try {
@@ -52,7 +67,9 @@ function App() {
       await authFetch('/auth/logout', { method: 'POST' })
       setUser(null)
       setCurrentView('hub')
+      setSelectedBoard(null)
       localStorage.removeItem('currentView')
+      localStorage.removeItem('selectedBoard')
       clearAuthToken() // Clear the stored token
     } catch (error) {
       console.error('Logout failed:', error)
@@ -65,6 +82,17 @@ function App() {
 
   const handleBackToHub = () => {
     setCurrentView('hub')
+    setSelectedBoard(null)
+  }
+
+  const handleSelectBoard = (board) => {
+    setSelectedBoard(board)
+    setCurrentView('board-edit')
+  }
+
+  const handleBackToBoards = () => {
+    setSelectedBoard(null)
+    setCurrentView('boards')
   }
 
   if (loading) {
@@ -87,9 +115,33 @@ function App() {
         return <SpotifyShare user={user} onBack={handleBackToHub} />
       case 'messages':
         return <Messages user={user} onBack={handleBackToHub} />
-      case 'board':
+      case 'boards':
       case 'documents':
-        return <CollaborativeBoard user={user} onBack={handleBackToHub} />
+        return (
+          <BoardSelector 
+            user={user} 
+            onBack={handleBackToHub} 
+            onSelectBoard={handleSelectBoard}
+          />
+        )
+      case 'board-edit':
+        if (selectedBoard) {
+          return (
+            <CollaborativeBoard 
+              user={user} 
+              board={selectedBoard}
+              onBack={handleBackToBoards} 
+            />
+          )
+        }
+        // If no board selected, go to board selector
+        return (
+          <BoardSelector 
+            user={user} 
+            onBack={handleBackToHub} 
+            onSelectBoard={handleSelectBoard}
+          />
+        )
       case 'games':
         return <GamesPlaceholder onBack={handleBackToHub} />
       default:

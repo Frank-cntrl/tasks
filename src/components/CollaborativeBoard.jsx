@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Tldraw, useEditor, track } from 'tldraw'
+import { Tldraw, getSnapshot, loadSnapshot } from 'tldraw'
 import 'tldraw/tldraw.css'
 import { io } from 'socket.io-client'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -12,10 +12,10 @@ import { API_URL } from '../config'
 import { uploadImage, validateImage } from '../utils/upload'
 import { authFetch } from '../utils/api'
 
-const BOARD_ID = 'shared-board' // Single shared board for now
+function CollaborativeBoard({ user, board, onBack }) {
+  const boardId = board?.boardId
+  const boardName = board?.name || 'Untitled Board'
 
-function CollaborativeBoard({ user, onBack }) {
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [connected, setConnected] = useState(false)
   const [connectedUsers, setConnectedUsers] = useState([])
@@ -24,6 +24,8 @@ function CollaborativeBoard({ user, onBack }) {
   const [currentTool, setCurrentTool] = useState('select')
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(100)
+  const [initialSnapshot, setInitialSnapshot] = useState(null)
+  const [snapshotLoaded, setSnapshotLoaded] = useState(false)
   
   const socketRef = useRef(null)
   const editorRef = useRef(null)
@@ -32,59 +34,68 @@ function CollaborativeBoard({ user, onBack }) {
   const cursorThrottleRef = useRef(null)
   const changesThrottleRef = useRef(null)
   const pendingChanges = useRef([])
+  const isApplyingRemote = useRef(false)
+  const storeListenerCleanup = useRef(null)
 
+  // Load initial snapshot from database
   useEffect(() => {
-    initBoard()
+    if (!boardId) return
+
+    const loadBoard = async () => {
+      try {
+        const response = await authFetch(`/api/boards/${boardId}/snapshot`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.snapshot) {
+            setInitialSnapshot(data.snapshot)
+          }
+          setLastSaved(data.updatedAt)
+        }
+      } catch (error) {
+        console.error('Failed to load board:', error)
+      }
+    }
+
+    loadBoard()
+  }, [boardId])
+
+  // Initialize Socket.IO
+  useEffect(() => {
+    if (!boardId) return
+
+    const initSocket = async () => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        if (!token) {
+          setConnectionError('Not authenticated')
+          return
+        }
+
+        const response = await authFetch('/auth/socket-token')
+        if (response.ok) {
+          const data = await response.json()
+          connectSocket(data.token)
+        } else {
+          setConnectionError('Failed to get socket token')
+        }
+      } catch (error) {
+        setConnectionError('Connection error: ' + error.message)
+      }
+    }
+
     initSocket()
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.emit('leave_board', { boardId: BOARD_ID })
+        socketRef.current.emit('leave_board', { boardId })
         socketRef.current.disconnect()
       }
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
       if (cursorThrottleRef.current) clearTimeout(cursorThrottleRef.current)
       if (changesThrottleRef.current) clearTimeout(changesThrottleRef.current)
+      if (storeListenerCleanup.current) storeListenerCleanup.current()
     }
-  }, [])
-
-  const initBoard = async () => {
-    try {
-      const response = await authFetch(`/api/boards/${BOARD_ID}/snapshot`)
-      if (response.ok) {
-        const data = await response.json()
-        if (data.snapshot && editorRef.current) {
-          // Load snapshot into tldraw
-          editorRef.current.store.loadSnapshot(data.snapshot)
-        }
-        setLastSaved(data.updatedAt)
-      }
-    } catch (error) {
-      console.error('Failed to load board:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const initSocket = async () => {
-    try {
-      const token = localStorage.getItem('auth_token')
-      if (!token) {
-        setConnectionError('Not authenticated')
-        return
-      }
-
-      const response = await authFetch('/auth/socket-token')
-      if (response.ok) {
-        const data = await response.json()
-        connectSocket(data.token)
-      } else {
-        setConnectionError('Failed to get socket token')
-      }
-    } catch (error) {
-      setConnectionError('Connection error: ' + error.message)
-    }
-  }
+  }, [boardId])
 
   const connectSocket = (token) => {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
@@ -102,7 +113,7 @@ function CollaborativeBoard({ user, onBack }) {
     socketRef.current.on('connect', () => {
       setConnected(true)
       setConnectionError(null)
-      socketRef.current.emit('join_board', { boardId: BOARD_ID })
+      socketRef.current.emit('join_board', { boardId })
     })
 
     socketRef.current.on('disconnect', () => {
@@ -111,11 +122,17 @@ function CollaborativeBoard({ user, onBack }) {
     })
 
     socketRef.current.on('board_users', (data) => {
+      // This is the initial list of OTHER users in the room
       setConnectedUsers(data.users || [])
     })
 
     socketRef.current.on('board_user_joined', (data) => {
-      setConnectedUsers(prev => [...prev, { userId: data.userId, username: data.username }])
+      // Add new user, avoid duplicates
+      setConnectedUsers(prev => {
+        const exists = prev.some(u => u.userId === data.userId)
+        if (exists) return prev
+        return [...prev, { userId: data.userId, username: data.username }]
+      })
     })
 
     socketRef.current.on('board_user_left', (data) => {
@@ -123,42 +140,71 @@ function CollaborativeBoard({ user, onBack }) {
     })
 
     socketRef.current.on('board_changes', (data) => {
-      if (editorRef.current && data.changes) {
-        // Apply remote changes to local editor
-        try {
-          editorRef.current.store.mergeRemoteChanges(() => {
-            // Apply the changes
-            data.changes.forEach(change => {
-              if (change.added) {
-                Object.values(change.added).forEach(record => {
-                  editorRef.current.store.put([record])
-                })
-              }
-              if (change.updated) {
-                Object.values(change.updated).forEach(record => {
-                  editorRef.current.store.put([record])
-                })
-              }
-              if (change.removed) {
-                Object.keys(change.removed).forEach(id => {
-                  editorRef.current.store.remove([id])
-                })
-              }
+      if (!editorRef.current || !data.changes) return
+      
+      // Avoid echo (don't apply our own changes)
+      if (data.userId === user.id) return
+
+      isApplyingRemote.current = true
+      
+      try {
+        const editor = editorRef.current
+        
+        // Apply each change set
+        data.changes.forEach(changeSet => {
+          // Handle added records
+          if (changeSet.added) {
+            const records = Object.values(changeSet.added)
+            if (records.length > 0) {
+              editor.store.put(records)
+            }
+          }
+          
+          // Handle updated records
+          if (changeSet.updated) {
+            Object.entries(changeSet.updated).forEach(([id, [from, to]]) => {
+              editor.store.put([to])
             })
-          })
-        } catch (error) {
-          console.error('Error applying remote changes:', error)
-        }
+          }
+          
+          // Handle removed records
+          if (changeSet.removed) {
+            const ids = Object.keys(changeSet.removed)
+            if (ids.length > 0) {
+              editor.store.remove(ids)
+            }
+          }
+        })
+      } catch (error) {
+        console.error('Error applying remote changes:', error)
+      } finally {
+        isApplyingRemote.current = false
       }
     })
   }
 
-  const handleEditorMount = (editor) => {
+  const handleEditorMount = useCallback((editor) => {
     editorRef.current = editor
 
-    // Listen to store changes and broadcast
-    editor.store.listen((entry) => {
-      const { changes } = entry
+    // Load initial snapshot if available
+    if (initialSnapshot && !snapshotLoaded) {
+      try {
+        loadSnapshot(editor.store, initialSnapshot)
+        setSnapshotLoaded(true)
+      } catch (error) {
+        console.error('Failed to load snapshot:', error)
+      }
+    }
+
+    // Listen to store changes for collaboration
+    const cleanup = editor.store.listen((entry) => {
+      // Don't broadcast if we're applying remote changes
+      if (isApplyingRemote.current) return
+      
+      const { changes, source } = entry
+      
+      // Only broadcast user changes
+      if (source !== 'user') return
       
       // Queue changes for throttled broadcast
       pendingChanges.current.push(changes)
@@ -168,23 +214,26 @@ function CollaborativeBoard({ user, onBack }) {
         changesThrottleRef.current = setTimeout(() => {
           if (socketRef.current && connected && pendingChanges.current.length > 0) {
             socketRef.current.emit('board_changes', {
-              boardId: BOARD_ID,
+              boardId,
               changes: pendingChanges.current,
             })
             pendingChanges.current = []
           }
           changesThrottleRef.current = null
-        }, 100) // Batch changes every 100ms
+        }, 50) // Batch changes every 50ms for smoother sync
       }
 
       // Debounce auto-save
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
       saveTimeoutRef.current = setTimeout(() => {
         saveBoard()
-      }, 5000) // Auto-save after 5 seconds of inactivity
-    })
+      }, 3000) // Auto-save after 3 seconds of inactivity
+    }, { source: 'all', scope: 'document' })
+
+    storeListenerCleanup.current = cleanup
 
     // Track cursor movement
+    const container = editor.getContainer()
     const handlePointerMove = (e) => {
       setCursorPos({ x: Math.round(e.clientX), y: Math.round(e.clientY) })
       
@@ -192,38 +241,49 @@ function CollaborativeBoard({ user, onBack }) {
       if (!cursorThrottleRef.current && socketRef.current && connected) {
         cursorThrottleRef.current = setTimeout(() => {
           socketRef.current.emit('board_cursor', {
-            boardId: BOARD_ID,
+            boardId,
             x: e.clientX,
             y: e.clientY,
           })
           cursorThrottleRef.current = null
-        }, 50)
+        }, 100)
       }
     }
 
-    editor.getContainer().addEventListener('pointermove', handlePointerMove)
+    container.addEventListener('pointermove', handlePointerMove)
 
-    // Track current tool
-    const checkCurrentTool = () => {
-      const tool = editor.getCurrentToolId()
-      setCurrentTool(tool)
-    }
-    
-    const interval = setInterval(checkCurrentTool, 500)
+    // Track current tool and zoom
+    const unsubscribe = editor.store.listen(() => {
+      setCurrentTool(editor.getCurrentToolId())
+      setZoom(Math.round(editor.getZoomLevel() * 100))
+    }, { source: 'all', scope: 'session' })
 
     return () => {
-      editor.getContainer().removeEventListener('pointermove', handlePointerMove)
-      clearInterval(interval)
+      container.removeEventListener('pointermove', handlePointerMove)
+      unsubscribe()
+      cleanup()
     }
-  }
+  }, [initialSnapshot, snapshotLoaded, boardId, connected, user.id])
+
+  // Effect to load snapshot when editor is ready and snapshot is fetched
+  useEffect(() => {
+    if (editorRef.current && initialSnapshot && !snapshotLoaded) {
+      try {
+        loadSnapshot(editorRef.current.store, initialSnapshot)
+        setSnapshotLoaded(true)
+      } catch (error) {
+        console.error('Failed to load snapshot:', error)
+      }
+    }
+  }, [initialSnapshot, snapshotLoaded])
 
   const saveBoard = async () => {
-    if (!editorRef.current || saving) return
+    if (!editorRef.current || saving || !boardId) return
 
     setSaving(true)
     try {
-      const snapshot = editorRef.current.store.getSnapshot()
-      const response = await authFetch(`/api/boards/${BOARD_ID}/snapshot`, {
+      const snapshot = getSnapshot(editorRef.current.store)
+      const response = await authFetch(`/api/boards/${boardId}/snapshot`, {
         method: 'POST',
         body: JSON.stringify({ snapshot }),
       })
@@ -236,20 +296,28 @@ function CollaborativeBoard({ user, onBack }) {
       }
     } catch (error) {
       console.error('Save failed:', error)
-      alert('Failed to save board')
     } finally {
       setSaving(false)
     }
   }
 
-  const handleExportPNG = () => {
+  const handleExportPNG = async () => {
     if (!editorRef.current) return
     
-    editorRef.current.exportAs(
-      editorRef.current.getCurrentPageShapeIds(),
-      'png',
-      `board-${Date.now()}`
-    )
+    const shapeIds = editorRef.current.getCurrentPageShapeIds()
+    if (shapeIds.size === 0) {
+      alert('No shapes to export')
+      return
+    }
+
+    try {
+      const blob = await editorRef.current.getSvg(shapeIds)
+      // Fallback: just alert that export is available
+      alert('Use the tldraw menu (top-left hamburger) to export as PNG')
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Export failed. Use the tldraw menu (top-left hamburger) to export.')
+    }
   }
 
   const handleImageUpload = async (e) => {
@@ -275,7 +343,8 @@ function CollaborativeBoard({ user, onBack }) {
           props: {
             w: 300,
             h: 300,
-            url: result.url,
+            src: result.url,
+            name: file.name,
           },
         })
       }
@@ -302,11 +371,25 @@ function CollaborativeBoard({ user, onBack }) {
     return date.toLocaleTimeString()
   }
 
+  // Calculate total online users (other users + self)
+  const totalOnline = connectedUsers.length + 1
+
+  if (!boardId) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-400">
+        <div className="bg-gray-300 border-2 border-t-white border-l-white 
+                     border-r-gray-600 border-b-gray-600 p-8">
+          <p className="text-sm font-bold text-gray-800">No board selected</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-screen flex flex-col bg-gray-400">
       {/* Top Toolbar - Retro Windows 98 Style */}
       <div className="flex-shrink-0 bg-gray-300 border-b-2 border-gray-600 shadow-sm">
-        <div className="flex items-center justify-between px-2 py-1.5">
+        <div className="flex items-center justify-between px-2 py-1.5 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <button
               onClick={onBack}
@@ -319,14 +402,14 @@ function CollaborativeBoard({ user, onBack }) {
               Back
             </button>
             
-            <div className="h-6 w-px bg-gray-600" />
+            <div className="h-6 w-px bg-gray-600 hidden sm:block" />
             
-            <span className="text-sm font-bold text-gray-800 px-2">
-              Collab Board - {user.username}
+            <span className="text-sm font-bold text-gray-800 px-2 truncate max-w-[150px] sm:max-w-none">
+              {boardName}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={saveBoard}
               disabled={saving}
@@ -337,18 +420,7 @@ function CollaborativeBoard({ user, onBack }) {
                        flex items-center gap-1"
             >
               <SaveIcon sx={{ fontSize: 14 }} />
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-
-            <button
-              onClick={handleExportPNG}
-              className="px-3 py-1 bg-gray-300 border-2 border-t-white border-l-white 
-                       border-r-gray-600 border-b-gray-600 hover:border-t-gray-600 
-                       hover:border-l-gray-600 hover:border-r-white hover:border-b-white
-                       active:bg-gray-400 text-xs font-bold flex items-center gap-1"
-            >
-              <DownloadIcon sx={{ fontSize: 14 }} />
-              Export PNG
+              <span className="hidden sm:inline">{saving ? 'Saving...' : 'Save'}</span>
             </button>
 
             <input
@@ -366,7 +438,7 @@ function CollaborativeBoard({ user, onBack }) {
                        active:bg-gray-400 text-xs font-bold flex items-center gap-1"
             >
               <ImageIcon sx={{ fontSize: 14 }} />
-              Upload Image
+              <span className="hidden sm:inline">Image</span>
             </button>
 
             <button
@@ -377,7 +449,7 @@ function CollaborativeBoard({ user, onBack }) {
                        active:bg-gray-400 text-xs font-bold flex items-center gap-1"
             >
               <ShareIcon sx={{ fontSize: 14 }} />
-              Share
+              <span className="hidden sm:inline">Share</span>
             </button>
 
             <div className="flex items-center gap-1 px-2">
@@ -386,7 +458,7 @@ function CollaborativeBoard({ user, onBack }) {
                 className={connected ? 'text-green-600' : 'text-red-600'} 
               />
               <span className="text-xs">
-                {connected ? `${connectedUsers.length + 1} online` : 'Offline'}
+                {connected ? `${totalOnline} online` : 'Offline'}
               </span>
             </div>
           </div>
@@ -401,44 +473,34 @@ function CollaborativeBoard({ user, onBack }) {
 
       {/* Main Content Area */}
       <div className="flex-1 relative overflow-hidden">
-        {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-400">
-            <div className="bg-gray-300 border-2 border-t-white border-l-white 
-                         border-r-gray-600 border-b-gray-600 p-8">
-              <p className="text-sm font-bold text-gray-800">Loading board...</p>
-            </div>
-          </div>
-        ) : (
-          <Tldraw
-            onMount={handleEditorMount}
-            className="tldraw-retro"
-          />
-        )}
+        <Tldraw
+          onMount={handleEditorMount}
+        />
       </div>
 
       {/* Bottom Status Bar - Retro Windows 98 Style */}
       <div className="flex-shrink-0 bg-gray-300 border-t-2 border-gray-600 px-2 py-1">
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between text-xs flex-wrap gap-1">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">
-              Tool: <span className="font-bold">{currentTool}</span>
+              <span className="font-bold">{currentTool}</span>
             </div>
-            <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">
+            <div className="px-2 py-0.5 bg-gray-400 border border-gray-600 hidden sm:block">
               X:{cursorPos.x} Y:{cursorPos.y}
             </div>
             <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">
-              Zoom: {zoom}%
+              {zoom}%
             </div>
           </div>
           
           <div className="flex items-center gap-2">
             {connectedUsers.length > 0 && (
-              <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">
-                Online: {connectedUsers.map(u => u.username).join(', ')}
+              <div className="px-2 py-0.5 bg-gray-400 border border-gray-600 hidden sm:block">
+                Also here: {connectedUsers.map(u => u.username).join(', ')}
               </div>
             )}
             <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">
-              Last saved: {formatTime(lastSaved)}
+              Saved: {formatTime(lastSaved)}
             </div>
           </div>
         </div>
