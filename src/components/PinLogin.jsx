@@ -46,7 +46,6 @@ function PinLogin({ onLogin }) {
         // Save token to localStorage for mobile compatibility
         if (data.token) {
           saveAuthToken(data.token)
-          console.log('✅ Token saved to localStorage')
         }
         onLogin(data.user)
       } else {

@@ -44,39 +44,28 @@ function Messages({ user, onBack }) {
 
   const initSocket = async () => {
     try {
-      // Check if token exists first
       const token = localStorage.getItem('auth_token')
-      console.log('Checking for auth token:', !!token)
       
       if (!token) {
-        console.error('❌ No auth token found in localStorage')
         setConnectionError('Not authenticated. Please log out and log back in.')
         return
       }
       
-      // Fetch socket token from backend
-      console.log('Fetching socket token...')
       setConnectionError('Connecting to chat server...')
       
       const response = await authFetch('/auth/socket-token')
-      console.log('Socket token response status:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ Got socket token')
         setConnectionError(null)
         connectSocket(data.token)
       } else if (response.status === 401 || response.status === 403) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('❌ Failed to get socket token:', response.status, errorData)
         setConnectionError('Session expired. Please log out and log back in.')
       } else {
         const errorData = await response.json().catch(() => ({}))
-        console.error('❌ Failed to get socket token:', response.status, errorData)
         setConnectionError(`Failed to connect: ${errorData.error || 'Server error'}`)
       }
     } catch (error) {
-      console.error('❌ Error getting socket token:', error)
       setConnectionError(`Connection error: ${error.message}`)
     }
   }
@@ -87,20 +76,13 @@ function Messages({ user, onBack }) {
 
   const fetchMessages = async () => {
     try {
-      console.log('Fetching messages from:', `${API_URL}/api/messages`)
       const response = await authFetch('/api/messages')
-      console.log('Messages response status:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Fetched messages:', data.length)
         setMessages(data)
       } else if (response.status === 401 || response.status === 403) {
-        console.error('❌ Not authenticated - token invalid or expired')
         setConnectionError('Session expired. Please log out and log back in.')
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Failed to fetch messages:', response.status, response.statusText, errorData)
       }
     } catch (error) {
       console.error('Failed to fetch messages:', error)
@@ -110,51 +92,38 @@ function Messages({ user, onBack }) {
   }
 
   const connectSocket = (token) => {
-    if (!token) {
-      console.error('No token provided for socket connection')
-      return
-    }
+    if (!token) return
 
-    console.log('Connecting to socket at:', API_URL)
-    
-    // Detect if on mobile
+    // Detect if on mobile for transport selection
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-    console.log('Is mobile device:', isMobile)
 
     socketRef.current = io(API_URL, {
       auth: { token },
       withCredentials: true,
-      // Force polling on mobile for better compatibility
       transports: isMobile ? ['polling'] : ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      timeout: 20000, // 20 second timeout
+      timeout: 20000,
     })
 
     socketRef.current.on('connect', () => {
-      console.log('✅ Socket connected! Transport:', socketRef.current.io.engine.transport.name)
       setConnected(true)
       setConnectionError(null)
       socketRef.current.emit('join_chat')
-      console.log('📤 Sent join_chat event')
     })
 
     socketRef.current.on('disconnect', (reason) => {
-      console.log('❌ Socket disconnected:', reason)
       setConnected(false)
       if (reason === 'io server disconnect') {
-        // Server disconnected, try to reconnect
         socketRef.current.connect()
       }
       setConnectionError(`Disconnected: ${reason}`)
     })
 
     socketRef.current.on('new_message', (message) => {
-      console.log('📨 Received new_message:', message.id)
       setMessages(prev => [...prev, message])
       
-      // Mark as read if from partner
       if (message.senderId === partnerId) {
         socketRef.current.emit('mark_read', [message.id])
       }
@@ -191,12 +160,10 @@ function Messages({ user, onBack }) {
     })
 
     socketRef.current.on('error', (error) => {
-      console.error('❌ Socket error:', error)
       setConnectionError(`Socket error: ${error.message || 'Unknown error'}`)
     })
 
     socketRef.current.on('connect_error', (error) => {
-      console.error('❌ Socket connection error:', error.message)
       setConnected(false)
       setConnectionError(`Connection failed: ${error.message}`)
     })
@@ -211,16 +178,13 @@ function Messages({ user, onBack }) {
     if (uploading) return
     
     if (!socketRef.current || !connected) {
-      console.log('❌ Cannot send: not connected. Socket exists:', !!socketRef.current, 'Connected:', connected)
       alert('Not connected to chat server. Check your connection and try refreshing the page.')
       return
     }
 
     let imageUrl = null
 
-    // Upload image via backend to Cloudinary if present
     if (imageFile) {
-      // Validate image first
       const validation = validateImage(imageFile)
       if (!validation.valid) {
         alert(validation.error)
@@ -231,9 +195,7 @@ function Messages({ user, onBack }) {
       try {
         const result = await uploadImage(imageFile, 'messages')
         imageUrl = result.url
-        console.log('Image uploaded:', imageUrl)
       } catch (error) {
-        console.error('Upload error:', error)
         alert('Failed to upload image: ' + error.message)
         setUploading(false)
         return
@@ -241,7 +203,6 @@ function Messages({ user, onBack }) {
       setUploading(false)
     }
 
-    console.log('Sending message via socket...')
     socketRef.current.emit('send_message', {
       content: newMessage.trim() || null,
       imageUrl,
@@ -252,7 +213,6 @@ function Messages({ user, onBack }) {
     setImagePreview(null)
     setImageFile(null)
     
-    // Stop typing indicator
     if (socketRef.current) {
       socketRef.current.emit('stop_typing')
     }
@@ -261,15 +221,12 @@ function Messages({ user, onBack }) {
   const handleTyping = (e) => {
     setNewMessage(e.target.value)
 
-    // Send typing indicator
     socketRef.current.emit('typing')
 
-    // Clear previous timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current)
     }
 
-    // Stop typing after 2 seconds of inactivity
     typingTimeoutRef.current = setTimeout(() => {
       socketRef.current.emit('stop_typing')
     }, 2000)
@@ -311,7 +268,6 @@ function Messages({ user, onBack }) {
     return date.toLocaleDateString()
   }
 
-  // Group messages by date
   const groupedMessages = messages.reduce((groups, message) => {
     const date = formatDate(message.createdAt)
     if (!groups[date]) groups[date] = []
