@@ -66,18 +66,18 @@ function SpotifyActivity({ user, connected, onConnect }) {
 
   if (!connected) {
     return (
-      <div className="mx-4 mt-4 p-6 bg-white rounded-2xl shadow-sm">
+      <div className="mx-4 mt-4 p-6 bg-gray-800 rounded-2xl border border-gray-700">
         <div className="text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <LinkIcon sx={{ fontSize: 32 }} className="text-green-600" />
+          <div className="w-16 h-16 bg-green-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <LinkIcon sx={{ fontSize: 32 }} className="text-green-400" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Connect Spotify</h3>
-          <p className="text-gray-500 text-sm mb-4">
+          <h3 className="text-lg font-bold text-white mb-2">Connect Spotify</h3>
+          <p className="text-gray-400 text-sm mb-4">
             Connect your Spotify account!
           </p>
           <button
             onClick={onConnect}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 
+            className="bg-green-500 hover:bg-green-400 text-white px-6 py-3 
                      rounded-xl font-semibold transition-all"
           >
             Connect Spotify
@@ -89,9 +89,9 @@ function SpotifyActivity({ user, connected, onConnect }) {
 
   if (loading) {
     return (
-      <div className="mx-4 mt-4 p-6 bg-white rounded-2xl shadow-sm">
+      <div className="mx-4 mt-4 p-6 bg-gray-800 rounded-2xl border border-gray-700">
         <div className="flex justify-center">
-          <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-green-400/30 border-t-green-500 rounded-full animate-spin" />
         </div>
       </div>
     )
@@ -100,10 +100,10 @@ function SpotifyActivity({ user, connected, onConnect }) {
   return (
     <div className="mx-4 mt-4 space-y-4">
       {/* Currently Playing Section */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-4 py-3 bg-green-50 border-b border-green-100 flex items-center gap-2">
-          <PlayArrowIcon className="text-green-600" />
-          <h3 className="font-semibold text-green-800">Now Playing</h3>
+      <div className="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700">
+        <div className="px-4 py-3 bg-green-900/30 border-b border-gray-700 flex items-center gap-2">
+          <PlayArrowIcon className="text-green-400" />
+          <h3 className="font-semibold text-green-300">Now Playing</h3>
         </div>
         <div className="p-4 grid grid-cols-2 gap-4">
           {['Frank', 'Ella'].map((name) => (
@@ -116,15 +116,15 @@ function SpotifyActivity({ user, connected, onConnect }) {
                     alt="Album art"
                     className="w-16 h-16 rounded-lg mx-auto shadow-md"
                   />
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-white truncate">
                     {currentlyPlaying[name].item.name}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-gray-400 truncate">
                     {currentlyPlaying[name].item.artists?.map(a => a.name).join(', ')}
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-gray-400">Not playing</p>
+                <p className="text-xs text-gray-500">Not playing</p>
               )}
             </div>
           ))}
@@ -132,10 +132,10 @@ function SpotifyActivity({ user, connected, onConnect }) {
       </div>
 
       {/* Recently Played Section */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-          <HistoryIcon className="text-gray-600" />
-          <h3 className="font-semibold text-gray-800">Recently Played</h3>
+      <div className="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700">
+        <div className="px-4 py-3 bg-gray-700/50 border-b border-gray-700 flex items-center gap-2">
+          <HistoryIcon className="text-gray-400" />
+          <h3 className="font-semibold text-gray-300">Recently Played</h3>
         </div>
         <div className="p-4">
           {['Frank', 'Ella'].map((name) => (
@@ -149,11 +149,11 @@ function SpotifyActivity({ user, connected, onConnect }) {
                       alt="Album art"
                       className="w-16 h-16 rounded-lg shadow-sm"
                     />
-                    <p className="text-xs text-gray-700 mt-1 truncate">{item.track?.name}</p>
+                    <p className="text-xs text-gray-300 mt-1 truncate">{item.track?.name}</p>
                   </div>
                 ))}
                 {(!recentlyPlayed[name] || recentlyPlayed[name].length === 0) && (
-                  <p className="text-xs text-gray-400">No recent tracks</p>
+                  <p className="text-xs text-gray-500">No recent tracks</p>
                 )}
               </div>
             </div>

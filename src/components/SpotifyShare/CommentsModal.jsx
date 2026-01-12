@@ -85,21 +85,21 @@ function CommentsModal({ post, currentUserId, onClose, onUpdate }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[80vh] 
-                   flex flex-col animate-slide-up"
+        className="bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[80vh] 
+                   flex flex-col animate-slide-up border border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Comments</h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-700">
+          <h2 className="text-xl font-bold text-white">Comments</h2>
           <button
             onClick={onClose}
             className="w-9 h-9 flex items-center justify-center rounded-xl 
-                     bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                     bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
           >
             <CloseIcon />
           </button>
@@ -109,35 +109,35 @@ function CommentsModal({ post, currentUserId, onClose, onUpdate }) {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-purple-400/30 border-t-purple-500 rounded-full animate-spin" />
             </div>
           ) : comments.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-400">No comments yet</p>
-              <p className="text-gray-400 text-sm">Be the first to comment!</p>
+              <p className="text-gray-500 text-sm">Be the first to comment!</p>
             </div>
           ) : (
             comments.map((comment) => (
               <div key={comment.id} className="flex gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <PersonIcon fontSize="small" className="text-purple-600" />
+                <div className="w-8 h-8 bg-purple-900/50 rounded-full flex items-center justify-center flex-shrink-0">
+                  <PersonIcon fontSize="small" className="text-purple-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-gray-900 text-sm">
+                    <span className="font-semibold text-white text-sm">
                       {comment.user?.username || 'User'}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-500">
                       {formatDate(comment.createdAt)}
                     </span>
                   </div>
-                  <p className="text-gray-700 text-sm">{comment.content}</p>
+                  <p className="text-gray-300 text-sm">{comment.content}</p>
                 </div>
                 {comment.userId === currentUserId && (
                   <button
                     onClick={() => handleDelete(comment.id)}
                     className="w-8 h-8 flex items-center justify-center rounded-lg 
-                             hover:bg-red-50 text-gray-400 hover:text-red-500 
+                             hover:bg-red-900/50 text-gray-500 hover:text-red-400 
                              transition-colors flex-shrink-0"
                   >
                     <DeleteIcon fontSize="small" />
@@ -149,21 +149,22 @@ function CommentsModal({ post, currentUserId, onClose, onUpdate }) {
         </div>
 
         {/* Add Comment */}
-        <form onSubmit={handleSubmit} className="p-4 border-t border-gray-100">
+        <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
           <div className="flex gap-2">
             <input
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Write a comment..."
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl 
-                       focus:outline-none focus:ring-2 focus:ring-green-500 
+              className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                       text-white placeholder-gray-400
+                       focus:outline-none focus:ring-2 focus:ring-purple-500 
                        focus:border-transparent"
             />
             <button
               type="submit"
               disabled={submitting || !newComment.trim()}
-              className="px-4 py-3 bg-green-500 hover:bg-green-600 text-white 
+              className="px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white 
                        rounded-xl transition-colors disabled:opacity-50"
             >
               <SendIcon />

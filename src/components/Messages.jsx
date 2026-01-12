@@ -278,9 +278,9 @@ function Messages({ user, onBack }) {
   const partnerName = user.id === 1 ? 'Ella' : 'Frank'
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gray-900 flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-4 shadow-lg">
+      <header className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-5 py-4 shadow-lg">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
@@ -296,7 +296,7 @@ function Messages({ user, onBack }) {
             </div>
             <div className="flex items-center gap-2 mt-1">
               <div className={`w-2 h-2 rounded-full ${partnerOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
-              <span className="text-sm text-white/80">
+              <span className="text-sm text-purple-200">
                 {partnerTyping ? `${partnerName} is typing...` : 
                  partnerOnline ? `${partnerName} is online` : `${partnerName} is offline`}
               </span>
@@ -309,8 +309,8 @@ function Messages({ user, onBack }) {
 
       {/* Connection Error Banner */}
       {connectionError && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 px-4 py-3 text-sm flex items-center justify-between">
-          <p className="text-yellow-800 font-medium">⚠️ {connectionError}</p>
+        <div className="bg-yellow-900/50 border-l-4 border-yellow-500 px-4 py-3 text-sm flex items-center justify-between">
+          <p className="text-yellow-200 font-medium">⚠️ {connectionError}</p>
           {!connected && (
             <button
               onClick={initSocket}
@@ -326,20 +326,20 @@ function Messages({ user, onBack }) {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-purple-400/30 border-t-purple-500 rounded-full animate-spin" />
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center py-20">
-            <ChatIcon sx={{ fontSize: 64 }} className="text-gray-300 mb-4" />
-            <p className="text-gray-500">No messages yet</p>
-            <p className="text-gray-400 text-sm">Start the conversation!</p>
+            <ChatIcon sx={{ fontSize: 64 }} className="text-gray-700 mb-4" />
+            <p className="text-gray-400">No messages yet</p>
+            <p className="text-gray-500 text-sm">Start the conversation!</p>
           </div>
         ) : (
           Object.entries(groupedMessages).map(([date, msgs]) => (
             <div key={date}>
               {/* Date separator */}
               <div className="flex items-center justify-center my-4">
-                <span className="bg-gray-200 px-3 py-1 rounded-full text-xs text-gray-600">
+                <span className="bg-gray-800 px-3 py-1 rounded-full text-xs text-gray-400">
                   {date}
                 </span>
               </div>
@@ -355,8 +355,8 @@ function Messages({ user, onBack }) {
                     <div
                       className={`max-w-[75%] rounded-2xl px-4 py-2 
                                 ${isOwn 
-                                  ? 'bg-blue-500 text-white rounded-br-sm' 
-                                  : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'}`}
+                                  ? 'bg-purple-600 text-white rounded-br-sm' 
+                                  : 'bg-gray-800 text-gray-100 rounded-bl-sm'}`}
                     >
                       {message.imageUrl && (
                         <img 
@@ -370,13 +370,13 @@ function Messages({ user, onBack }) {
                       )}
                       <div className={`flex items-center gap-1 mt-1 
                                     ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                        <span className={`text-xs ${isOwn ? 'text-blue-100' : 'text-gray-400'}`}>
+                        <span className={`text-xs ${isOwn ? 'text-purple-200' : 'text-gray-500'}`}>
                           {formatTime(message.createdAt)}
                         </span>
                         {isOwn && (
                           message.read 
-                            ? <DoneAllIcon sx={{ fontSize: 14 }} className="text-blue-100" />
-                            : <DoneIcon sx={{ fontSize: 14 }} className="text-blue-200" />
+                            ? <DoneAllIcon sx={{ fontSize: 14 }} className="text-purple-200" />
+                            : <DoneIcon sx={{ fontSize: 14 }} className="text-purple-300" />
                         )}
                       </div>
                     </div>
@@ -410,7 +410,7 @@ function Messages({ user, onBack }) {
       )}
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-4 py-3">
+      <div className="bg-gray-800 border-t border-gray-700 px-4 py-3">
         <div className="flex items-center gap-2">
           <input
             type="file"
@@ -423,7 +423,7 @@ function Messages({ user, onBack }) {
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="w-10 h-10 flex items-center justify-center rounded-xl 
-                     bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors
+                     bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors
                      disabled:opacity-50"
           >
             <ImageIcon />
@@ -435,15 +435,15 @@ function Messages({ user, onBack }) {
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && !uploading && handleSend()}
             placeholder="Type a message..."
             disabled={uploading}
-            className="flex-1 px-4 py-3 bg-gray-100 rounded-xl 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500
+            className="flex-1 px-4 py-3 bg-gray-700 text-white placeholder-gray-400 rounded-xl 
+                     focus:outline-none focus:ring-2 focus:ring-purple-500
                      disabled:opacity-50"
           />
           <button
             onClick={handleSend}
             disabled={uploading || (!newMessage.trim() && !imagePreview)}
             className="w-10 h-10 flex items-center justify-center rounded-xl 
-                     bg-blue-500 hover:bg-blue-600 text-white transition-colors
+                     bg-purple-600 hover:bg-purple-500 text-white transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? (

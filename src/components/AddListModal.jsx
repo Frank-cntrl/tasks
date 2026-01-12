@@ -51,21 +51,21 @@ function AddListModal({ onClose, onListCreated, isShared }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] 
-                   overflow-y-auto animate-slide-up"
+        className="bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] 
+                   overflow-y-auto animate-slide-up border border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Create New List</h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-700">
+          <h2 className="text-xl font-bold text-white">Create New List</h2>
           <button
             onClick={onClose}
             className="w-9 h-9 flex items-center justify-center rounded-xl 
-                     bg-gray-100 hover:bg-gray-200 text-gray-600 
+                     bg-gray-700 hover:bg-gray-600 text-gray-300 
                      transition-colors duration-200"
           >
             <CloseIcon />
@@ -76,7 +76,7 @@ function AddListModal({ onClose, onListCreated, isShared }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="title" className="block text-sm font-semibold text-gray-300 mb-2">
               Title *
             </label>
             <input
@@ -86,7 +86,8 @@ function AddListModal({ onClose, onListCreated, isShared }) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter list title"
               autoFocus
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                       text-white placeholder-gray-400
                        focus:outline-none focus:ring-2 focus:ring-purple-500 
                        focus:border-transparent transition-all duration-200"
             />
@@ -94,7 +95,7 @@ function AddListModal({ onClose, onListCreated, isShared }) {
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="description" className="block text-sm font-semibold text-gray-300 mb-2">
               Description
             </label>
             <textarea
@@ -103,7 +104,8 @@ function AddListModal({ onClose, onListCreated, isShared }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter description (optional)"
               rows="3"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                       text-white placeholder-gray-400
                        focus:outline-none focus:ring-2 focus:ring-purple-500 
                        focus:border-transparent transition-all duration-200 resize-none"
             />
@@ -111,19 +113,19 @@ function AddListModal({ onClose, onListCreated, isShared }) {
 
           {/* Info Badge */}
           <div className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
-            isShared ? 'bg-purple-50' : 'bg-blue-50'
+            isShared ? 'bg-purple-900/50 border border-purple-700' : 'bg-blue-900/50 border border-blue-700'
           }`}>
             {isShared ? (
               <>
-                <PeopleIcon className="text-purple-600" />
-                <span className="text-sm font-medium text-purple-900">
+                <PeopleIcon className="text-purple-400" />
+                <span className="text-sm font-medium text-purple-200">
                   This will be a shared list
                 </span>
               </>
             ) : (
               <>
-                <LockIcon className="text-blue-600" />
-                <span className="text-sm font-medium text-blue-900">
+                <LockIcon className="text-blue-400" />
+                <span className="text-sm font-medium text-blue-200">
                   This will be a private list
                 </span>
               </>
@@ -132,8 +134,8 @@ function AddListModal({ onClose, onListCreated, isShared }) {
 
           {/* Error */}
           {error && (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="px-4 py-3 bg-red-900/50 border border-red-700 rounded-xl">
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           )}
 
@@ -143,7 +145,7 @@ function AddListModal({ onClose, onListCreated, isShared }) {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 
+              className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 
                        font-semibold rounded-xl transition-colors duration-200 
                        disabled:opacity-50"
             >
@@ -152,7 +154,7 @@ function AddListModal({ onClose, onListCreated, isShared }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white 
+              className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white 
                        font-semibold rounded-xl transition-all duration-200 
                        disabled:opacity-50 shadow-md hover:shadow-lg"
             >

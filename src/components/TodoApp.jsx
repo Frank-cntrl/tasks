@@ -103,9 +103,9 @@ function TodoApp({ user, onLogout, onBack }) {
   const currentLists = activeTab === 'my' ? myLists : sharedLists
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-900 pb-20">
       {/* Header */}
-      <header className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-4 shadow-lg">
+      <header className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-5 py-4 shadow-lg">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
@@ -122,15 +122,15 @@ function TodoApp({ user, onLogout, onBack }) {
       </header>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+      <div className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10 shadow-sm">
         <div className="flex">
           <button
             onClick={() => setActiveTab('my')}
             className={`flex-1 py-4 text-sm font-semibold transition-all duration-200 
                      border-b-2 ${
                        activeTab === 'my'
-                         ? 'text-purple-600 border-purple-600'
-                         : 'text-gray-500 border-transparent hover:text-gray-700'
+                         ? 'text-purple-400 border-purple-500'
+                         : 'text-gray-400 border-transparent hover:text-gray-300'
                      }`}
           >
             My Lists
@@ -140,8 +140,8 @@ function TodoApp({ user, onLogout, onBack }) {
             className={`flex-1 py-4 text-sm font-semibold transition-all duration-200 
                      border-b-2 ${
                        activeTab === 'shared'
-                         ? 'text-purple-600 border-purple-600'
-                         : 'text-gray-500 border-transparent hover:text-gray-700'
+                         ? 'text-purple-400 border-purple-500'
+                         : 'text-gray-400 border-transparent hover:text-gray-300'
                      }`}
           >
             Shared Lists
@@ -153,15 +153,15 @@ function TodoApp({ user, onLogout, onBack }) {
       <div className="px-4 py-5 space-y-4">
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 
+            <div className="w-10 h-10 border-4 border-purple-400/30 border-t-purple-500 
                          rounded-full animate-spin" />
           </div>
         ) : currentLists.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-500 text-lg mb-6">No lists yet</p>
+            <p className="text-gray-400 text-lg mb-6">No lists yet</p>
             <button
               onClick={handleAddList}
-              className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 
+              className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 
                        text-white px-6 py-3 rounded-xl font-semibold 
                        transition-all duration-200 shadow-md hover:shadow-lg"
             >
@@ -190,7 +190,7 @@ function TodoApp({ user, onLogout, onBack }) {
       {currentLists.length > 0 && (
         <button
           onClick={handleAddList}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 hover:bg-purple-700 
+          className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 hover:bg-purple-500 
                    text-white rounded-full shadow-xl hover:shadow-2xl 
                    transition-all duration-200 hover:scale-110 active:scale-95 
                    flex items-center justify-center z-50"

@@ -96,9 +96,9 @@ function SpotifyShare({ user, onBack }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-900 pb-20">
       {/* Header */}
-      <header className="bg-gradient-to-r from-green-400 to-green-600 text-white px-5 py-4 shadow-lg">
+      <header className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-4 shadow-lg">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
@@ -123,19 +123,19 @@ function SpotifyShare({ user, onBack }) {
 
       {/* Posts Feed */}
       <div className="px-4 py-4">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Music Feed</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Music Feed</h2>
         
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-green-400/30 border-t-green-500 rounded-full animate-spin" />
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl shadow-sm">
-            <MusicNoteIcon sx={{ fontSize: 48 }} className="text-gray-300 mb-4" />
-            <p className="text-gray-500 mb-4">No posts yet</p>
+          <div className="text-center py-12 bg-gray-800 rounded-2xl border border-gray-700">
+            <MusicNoteIcon sx={{ fontSize: 48 }} className="text-gray-600 mb-4" />
+            <p className="text-gray-400 mb-4">No posts yet</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 
+              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-400 
                        text-white px-6 py-3 rounded-xl font-semibold transition-all"
             >
               <AddIcon />
@@ -161,7 +161,7 @@ function SpotifyShare({ user, onBack }) {
       {/* FAB */}
       <button
         onClick={() => setShowCreateModal(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-green-500 hover:bg-green-600 
+        className="fixed bottom-6 right-6 w-14 h-14 bg-green-500 hover:bg-green-400 
                  text-white rounded-full shadow-xl hover:shadow-2xl 
                  transition-all duration-200 hover:scale-110 active:scale-95 
                  flex items-center justify-center z-50"

@@ -6,20 +6,20 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
   const canDelete = list.userId === currentUserId
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div className="bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-700">
       {/* List Header */}
-      <div className="px-5 py-4 border-b border-gray-100">
+      <div className="px-5 py-4 border-b border-gray-700">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900">{list.title}</h3>
+            <h3 className="text-lg font-bold text-white">{list.title}</h3>
             {list.description && (
-              <p className="text-sm text-gray-500 mt-1">{list.description}</p>
+              <p className="text-sm text-gray-400 mt-1">{list.description}</p>
             )}
           </div>
           <div className="flex gap-2 ml-3">
             <button
               onClick={() => onAddTask(list)}
-              className="w-9 h-9 bg-purple-600 hover:bg-purple-700 text-white 
+              className="w-9 h-9 bg-purple-600 hover:bg-purple-500 text-white 
                        rounded-xl transition-all duration-200 hover:scale-105 
                        flex items-center justify-center shadow-sm"
             >
@@ -28,7 +28,7 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
             {canDelete && (
               <button
                 onClick={() => onListDelete(list.id)}
-                className="w-9 h-9 bg-red-50 hover:bg-red-100 text-red-600 
+                className="w-9 h-9 bg-red-900/50 hover:bg-red-800/50 text-red-400 
                          rounded-xl transition-all duration-200 hover:scale-105 
                          flex items-center justify-center"
               >
@@ -46,7 +46,7 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
             {list.tasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-start gap-3 p-3 bg-gray-50 hover:bg-gray-100 
+                className="flex items-start gap-3 p-3 bg-gray-700/50 hover:bg-gray-700 
                          rounded-xl transition-all duration-200 group"
               >
                 {/* Checkbox */}
@@ -54,8 +54,8 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
                   type="checkbox"
                   checked={task.isCompleted}
                   onChange={() => onTaskToggle(task.id, task.isCompleted)}
-                  className="mt-0.5 w-5 h-5 rounded border-gray-300 text-purple-600 
-                           focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                  className="mt-0.5 w-5 h-5 rounded border-gray-600 bg-gray-700 text-purple-500 
+                           focus:ring-purple-500 focus:ring-offset-0 focus:ring-offset-gray-800 cursor-pointer"
                 />
 
                 {/* Task Content */}
@@ -63,14 +63,14 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
                   <p
                     className={`text-base leading-relaxed ${
                       task.isCompleted
-                        ? 'line-through text-gray-400'
-                        : 'text-gray-900'
+                        ? 'line-through text-gray-500'
+                        : 'text-gray-100'
                     }`}
                   >
                     {task.title}
                   </p>
                   {task.description && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-400 mt-1">
                       {task.description}
                     </p>
                   )}
@@ -81,10 +81,10 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-md 
                                    text-xs font-semibold uppercase ${
                                      task.priority === 'high'
-                                       ? 'bg-red-100 text-red-800'
+                                       ? 'bg-red-900/50 text-red-400'
                                        : task.priority === 'medium'
-                                       ? 'bg-yellow-100 text-yellow-800'
-                                       : 'bg-blue-100 text-blue-800'
+                                       ? 'bg-yellow-900/50 text-yellow-400'
+                                       : 'bg-blue-900/50 text-blue-400'
                                    }`}
                         >
                           {task.priority}
@@ -92,7 +92,7 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
                       )}
                       {task.dueDate && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-md 
-                                       text-xs bg-gray-200 text-gray-700">
+                                       text-xs bg-gray-600 text-gray-300">
                           {new Date(task.dueDate).toLocaleDateString()}
                         </span>
                       )}
@@ -105,7 +105,7 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
                   onClick={() => onTaskDelete(task.id)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity duration-200
                            w-7 h-7 flex items-center justify-center rounded-lg
-                           hover:bg-red-50 text-gray-400 hover:text-red-600"
+                           hover:bg-red-900/50 text-gray-500 hover:text-red-400"
                 >
                   <CloseIcon fontSize="small" />
                 </button>
@@ -113,7 +113,7 @@ function TodoList({ list, onAddTask, onTaskToggle, onTaskDelete, onListDelete, c
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-400 py-8 text-sm">No tasks yet</p>
+          <p className="text-center text-gray-500 py-8 text-sm">No tasks yet</p>
         )}
       </div>
     </div>

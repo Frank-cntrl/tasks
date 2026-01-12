@@ -24,15 +24,15 @@ function PostCard({ post, currentUserId, onLike, onDelete, onShowComments }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700">
       {/* Post Header */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+      <div className="px-4 py-3 flex items-center justify-between border-b border-gray-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-            <PersonIcon className="text-purple-600" />
+          <div className="w-10 h-10 bg-purple-900/50 rounded-full flex items-center justify-center">
+            <PersonIcon className="text-purple-400" />
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{post.user?.username || 'User'}</p>
+            <p className="font-semibold text-white">{post.user?.username || 'User'}</p>
             <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
           </div>
         </div>
@@ -40,7 +40,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onShowComments }) {
           <button
             onClick={() => onDelete(post.id)}
             className="w-8 h-8 flex items-center justify-center rounded-lg 
-                     hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                     hover:bg-red-900/50 text-gray-500 hover:text-red-400 transition-colors"
           >
             <DeleteIcon fontSize="small" />
           </button>
@@ -50,7 +50,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onShowComments }) {
       {/* Post Content */}
       {post.content && (
         <div className="px-4 py-3">
-          <p className="text-gray-800 whitespace-pre-wrap">{post.content}</p>
+          <p className="text-gray-200 whitespace-pre-wrap">{post.content}</p>
         </div>
       )}
 
@@ -70,10 +70,10 @@ function PostCard({ post, currentUserId, onLike, onDelete, onShowComments }) {
       )}
 
       {/* Post Actions */}
-      <div className="px-4 py-3 border-t border-gray-100 flex items-center gap-6">
+      <div className="px-4 py-3 border-t border-gray-700 flex items-center gap-6">
         <button
           onClick={() => onLike(post.id)}
-          className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition-colors"
+          className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors"
         >
           {isLiked ? (
             <FavoriteIcon className="text-red-500" fontSize="small" />
@@ -87,7 +87,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onShowComments }) {
 
         <button
           onClick={() => onShowComments(post)}
-          className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
+          className="flex items-center gap-2 text-gray-400 hover:text-purple-400 transition-colors"
         >
           <ChatBubbleOutlineIcon fontSize="small" />
           <span className="text-sm font-medium">{commentCount}</span>

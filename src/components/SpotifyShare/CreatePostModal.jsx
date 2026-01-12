@@ -83,21 +83,21 @@ function CreatePostModal({ onClose, onPostCreated }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] 
-                   overflow-y-auto animate-slide-up"
+        className="bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] 
+                   overflow-y-auto animate-slide-up border border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Share Music</h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-700">
+          <h2 className="text-xl font-bold text-white">Share Music</h2>
           <button
             onClick={onClose}
             className="w-9 h-9 flex items-center justify-center rounded-xl 
-                     bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                     bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
           >
             <CloseIcon />
           </button>
@@ -106,7 +106,7 @@ function CreatePostModal({ onClose, onPostCreated }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Content */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
               What's on your mind?
             </label>
             <textarea
@@ -114,7 +114,8 @@ function CreatePostModal({ onClose, onPostCreated }) {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Share your thoughts about this track..."
               rows="3"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                       text-white placeholder-gray-400
                        focus:outline-none focus:ring-2 focus:ring-green-500 
                        focus:border-transparent resize-none"
             />
@@ -122,7 +123,7 @@ function CreatePostModal({ onClose, onPostCreated }) {
 
           {/* Track Search */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
               Add a Track
             </label>
             <div className="flex gap-2">
@@ -132,7 +133,8 @@ function CreatePostModal({ onClose, onPostCreated }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearch())}
                 placeholder="Search for a song..."
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl 
+                className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                         text-white placeholder-gray-400
                          focus:outline-none focus:ring-2 focus:ring-green-500 
                          focus:border-transparent"
               />
@@ -140,7 +142,7 @@ function CreatePostModal({ onClose, onPostCreated }) {
                 type="button"
                 onClick={handleSearch}
                 disabled={searching}
-                className="px-4 py-3 bg-green-500 hover:bg-green-600 text-white 
+                className="px-4 py-3 bg-green-500 hover:bg-green-400 text-white 
                          rounded-xl transition-colors disabled:opacity-50"
               >
                 <SearchIcon />
@@ -150,14 +152,14 @@ function CreatePostModal({ onClose, onPostCreated }) {
 
           {/* Search Results */}
           {searchResults.length > 0 && (
-            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl">
+            <div className="max-h-48 overflow-y-auto border border-gray-600 rounded-xl bg-gray-700">
               {searchResults.map((track) => (
                 <button
                   key={track.id}
                   type="button"
                   onClick={() => handleSelectTrack(track)}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 
-                           border-b border-gray-100 last:border-b-0 text-left"
+                  className="w-full flex items-center gap-3 p-3 hover:bg-gray-600 
+                           border-b border-gray-600 last:border-b-0 text-left"
                 >
                   <img
                     src={track.album?.images?.[2]?.url || '/placeholder.png'}
@@ -165,8 +167,8 @@ function CreatePostModal({ onClose, onPostCreated }) {
                     className="w-12 h-12 rounded-lg"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{track.name}</p>
-                    <p className="text-sm text-gray-500 truncate">
+                    <p className="font-medium text-white truncate">{track.name}</p>
+                    <p className="text-sm text-gray-400 truncate">
                       {track.artists?.map(a => a.name).join(', ')}
                     </p>
                   </div>
@@ -177,7 +179,7 @@ function CreatePostModal({ onClose, onPostCreated }) {
 
           {/* Selected Track */}
           {selectedTrack && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="bg-green-900/30 border border-green-700 rounded-xl p-4">
               <div className="flex items-center gap-3">
                 <img
                   src={selectedTrack.album?.images?.[2]?.url || '/placeholder.png'}
@@ -185,15 +187,15 @@ function CreatePostModal({ onClose, onPostCreated }) {
                   className="w-12 h-12 rounded-lg"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{selectedTrack.name}</p>
-                  <p className="text-sm text-gray-500 truncate">
+                  <p className="font-medium text-white truncate">{selectedTrack.name}</p>
+                  <p className="text-sm text-gray-400 truncate">
                     {selectedTrack.artists?.map(a => a.name).join(', ')}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedTrack(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-200"
                 >
                   <CloseIcon fontSize="small" />
                 </button>
@@ -202,7 +204,7 @@ function CreatePostModal({ onClose, onPostCreated }) {
           )}
 
           {!selectedTrack && !searchResults.length && (
-            <div className="text-center py-4 text-gray-400">
+            <div className="text-center py-4 text-gray-500">
               <MusicNoteIcon sx={{ fontSize: 32 }} />
               <p className="text-sm mt-2">Search for a track to share</p>
             </div>
@@ -210,8 +212,8 @@ function CreatePostModal({ onClose, onPostCreated }) {
 
           {/* Error */}
           {error && (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="px-4 py-3 bg-red-900/50 border border-red-700 rounded-xl">
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           )}
 
@@ -221,7 +223,7 @@ function CreatePostModal({ onClose, onPostCreated }) {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 
+              className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 
                        font-semibold rounded-xl transition-colors disabled:opacity-50"
             >
               Cancel
@@ -229,7 +231,7 @@ function CreatePostModal({ onClose, onPostCreated }) {
             <button
               type="submit"
               disabled={loading || (!content.trim() && !selectedTrack)}
-              className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white 
+              className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-400 text-white 
                        font-semibold rounded-xl transition-all disabled:opacity-50"
             >
               {loading ? 'Posting...' : 'Post'}

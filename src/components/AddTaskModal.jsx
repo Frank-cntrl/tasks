@@ -53,21 +53,21 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] 
-                   overflow-y-auto animate-slide-up"
+        className="bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] 
+                   overflow-y-auto animate-slide-up border border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Add Task</h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-700">
+          <h2 className="text-xl font-bold text-white">Add Task</h2>
           <button
             onClick={onClose}
             className="w-9 h-9 flex items-center justify-center rounded-xl 
-                     bg-gray-100 hover:bg-gray-200 text-gray-600 
+                     bg-gray-700 hover:bg-gray-600 text-gray-300 
                      transition-colors duration-200"
           >
             <CloseIcon />
@@ -75,16 +75,16 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
         </div>
 
         {/* Subtitle */}
-        <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-          <PlaylistAddCheckIcon className="text-purple-600" fontSize="small" />
-          <span className="text-sm text-gray-600">To: <span className="font-semibold text-gray-900">{list.title}</span></span>
+        <div className="px-6 py-3 bg-gray-900/50 border-b border-gray-700 flex items-center gap-2">
+          <PlaylistAddCheckIcon className="text-purple-400" fontSize="small" />
+          <span className="text-sm text-gray-400">To: <span className="font-semibold text-white">{list.title}</span></span>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="title" className="block text-sm font-semibold text-gray-300 mb-2">
               Title *
             </label>
             <input
@@ -94,7 +94,8 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter task title"
               autoFocus
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                       text-white placeholder-gray-400
                        focus:outline-none focus:ring-2 focus:ring-purple-500 
                        focus:border-transparent transition-all duration-200"
             />
@@ -102,7 +103,7 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="description" className="block text-sm font-semibold text-gray-300 mb-2">
               Description
             </label>
             <textarea
@@ -111,7 +112,8 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter description (optional)"
               rows="3"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                       text-white placeholder-gray-400
                        focus:outline-none focus:ring-2 focus:ring-purple-500 
                        focus:border-transparent transition-all duration-200 resize-none"
             />
@@ -120,16 +122,17 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
           {/* Priority and Due Date */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="priority" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="priority" className="block text-sm font-semibold text-gray-300 mb-2">
                 Priority
               </label>
               <select
                 id="priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                         text-white
                          focus:outline-none focus:ring-2 focus:ring-purple-500 
-                         focus:border-transparent transition-all duration-200 bg-white"
+                         focus:border-transparent transition-all duration-200"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -138,7 +141,7 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
             </div>
 
             <div>
-              <label htmlFor="dueDate" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="dueDate" className="block text-sm font-semibold text-gray-300 mb-2">
                 Due Date
               </label>
               <input
@@ -146,7 +149,8 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl 
+                         text-white
                          focus:outline-none focus:ring-2 focus:ring-purple-500 
                          focus:border-transparent transition-all duration-200"
               />
@@ -155,8 +159,8 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
 
           {/* Error */}
           {error && (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="px-4 py-3 bg-red-900/50 border border-red-700 rounded-xl">
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           )}
 
@@ -166,7 +170,7 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 
+              className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 
                        font-semibold rounded-xl transition-colors duration-200 
                        disabled:opacity-50"
             >
@@ -175,7 +179,7 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white 
+              className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white 
                        font-semibold rounded-xl transition-all duration-200 
                        disabled:opacity-50 shadow-md hover:shadow-lg"
             >
