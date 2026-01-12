@@ -1,7 +1,7 @@
 import ChecklistIcon from '@mui/icons-material/Checklist'
 import MusicNoteIcon from '@mui/icons-material/MusicNote'
 import ChatIcon from '@mui/icons-material/Chat'
-import FolderSharedIcon from '@mui/icons-material/FolderShared'
+import BrushIcon from '@mui/icons-material/Brush'
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
 import LogoutIcon from '@mui/icons-material/Logout'
 import FavoriteIcon from '@mui/icons-material/Favorite'
@@ -30,9 +30,9 @@ const navigationItems = [
   },
   {
     id: 'documents',
-    name: 'Shared Documents',
-    icon: FolderSharedIcon,
-    enabled: false,
+    name: 'Collab Board',
+    icon: BrushIcon,
+    enabled: true,
     color: 'from-yellow-500 to-yellow-600',
   },
   {

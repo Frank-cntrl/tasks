@@ -4,7 +4,7 @@ import NavigationHub from './components/NavigationHub'
 import TodoApp from './components/TodoApp'
 import SpotifyShare from './components/SpotifyShare/SpotifyShare'
 import Messages from './components/Messages'
-import SharedDocsPlaceholder from './components/SharedDocsPlaceholder'
+import CollaborativeBoard from './components/CollaborativeBoard'
 import GamesPlaceholder from './components/GamesPlaceholder'
 import { API_URL } from './config'
 import { authFetch, clearAuthToken } from './utils/api'
@@ -87,8 +87,9 @@ function App() {
         return <SpotifyShare user={user} onBack={handleBackToHub} />
       case 'messages':
         return <Messages user={user} onBack={handleBackToHub} />
+      case 'board':
       case 'documents':
-        return <SharedDocsPlaceholder onBack={handleBackToHub} />
+        return <CollaborativeBoard user={user} onBack={handleBackToHub} />
       case 'games':
         return <GamesPlaceholder onBack={handleBackToHub} />
       default:
