@@ -44,6 +44,16 @@ function Messages({ user, onBack }) {
 
   const initSocket = async () => {
     try {
+      // Check if token exists first
+      const token = localStorage.getItem('auth_token')
+      console.log('Checking for auth token:', !!token)
+      
+      if (!token) {
+        console.error('❌ No auth token found in localStorage')
+        setConnectionError('Not authenticated. Please log out and log back in.')
+        return
+      }
+      
       // Fetch socket token from backend
       console.log('Fetching socket token...')
       setConnectionError('Connecting to chat server...')
@@ -56,10 +66,14 @@ function Messages({ user, onBack }) {
         console.log('✅ Got socket token')
         setConnectionError(null)
         connectSocket(data.token)
+      } else if (response.status === 401 || response.status === 403) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('❌ Failed to get socket token:', response.status, errorData)
+        setConnectionError('Session expired. Please log out and log back in.')
       } else {
         const errorData = await response.json().catch(() => ({}))
         console.error('❌ Failed to get socket token:', response.status, errorData)
-        setConnectionError(`Failed to connect: ${errorData.error || 'Authentication failed'}`)
+        setConnectionError(`Failed to connect: ${errorData.error || 'Server error'}`)
       }
     } catch (error) {
       console.error('❌ Error getting socket token:', error)
@@ -76,10 +90,14 @@ function Messages({ user, onBack }) {
       console.log('Fetching messages from:', `${API_URL}/api/messages`)
       const response = await authFetch('/api/messages')
       console.log('Messages response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
         console.log('Fetched messages:', data.length)
         setMessages(data)
+      } else if (response.status === 401 || response.status === 403) {
+        console.error('❌ Not authenticated - token invalid or expired')
+        setConnectionError('Session expired. Please log out and log back in.')
       } else {
         const errorData = await response.json().catch(() => ({}))
         console.error('Failed to fetch messages:', response.status, response.statusText, errorData)
