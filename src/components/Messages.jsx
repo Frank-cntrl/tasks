@@ -98,30 +98,42 @@ function Messages({ user, onBack }) {
     }
 
     console.log('Connecting to socket at:', API_URL)
+    
+    // Detect if on mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    console.log('Is mobile device:', isMobile)
 
     socketRef.current = io(API_URL, {
       auth: { token },
       withCredentials: true,
-      transports: ['websocket', 'polling'],
+      // Force polling on mobile for better compatibility
+      transports: isMobile ? ['polling'] : ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      timeout: 20000, // 20 second timeout
     })
 
     socketRef.current.on('connect', () => {
-      console.log('✅ Socket connected!')
+      console.log('✅ Socket connected! Transport:', socketRef.current.io.engine.transport.name)
       setConnected(true)
       setConnectionError(null)
       socketRef.current.emit('join_chat')
+      console.log('📤 Sent join_chat event')
     })
 
     socketRef.current.on('disconnect', (reason) => {
       console.log('❌ Socket disconnected:', reason)
       setConnected(false)
+      if (reason === 'io server disconnect') {
+        // Server disconnected, try to reconnect
+        socketRef.current.connect()
+      }
       setConnectionError(`Disconnected: ${reason}`)
     })
 
     socketRef.current.on('new_message', (message) => {
+      console.log('📨 Received new_message:', message.id)
       setMessages(prev => [...prev, message])
       
       // Mark as read if from partner
@@ -323,8 +335,16 @@ function Messages({ user, onBack }) {
 
       {/* Connection Error Banner */}
       {connectionError && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 px-4 py-3 text-sm">
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 px-4 py-3 text-sm flex items-center justify-between">
           <p className="text-yellow-800 font-medium">⚠️ {connectionError}</p>
+          {!connected && (
+            <button
+              onClick={initSocket}
+              className="ml-2 px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-medium"
+            >
+              Retry
+            </button>
+          )}
         </div>
       )}
 
