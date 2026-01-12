@@ -21,6 +21,7 @@ function Messages({ user, onBack }) {
   const [imagePreview, setImagePreview] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [connectionError, setConnectionError] = useState(null)
   
   const socketRef = useRef(null)
   const messagesEndRef = useRef(null)
@@ -45,18 +46,24 @@ function Messages({ user, onBack }) {
     try {
       // Fetch socket token from backend
       console.log('Fetching socket token...')
+      setConnectionError('Connecting to chat server...')
+      
       const response = await authFetch('/auth/socket-token')
       console.log('Socket token response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
         console.log('✅ Got socket token')
+        setConnectionError(null)
         connectSocket(data.token)
       } else {
         const errorData = await response.json().catch(() => ({}))
-        console.error('Failed to get socket token:', response.status, errorData)
+        console.error('❌ Failed to get socket token:', response.status, errorData)
+        setConnectionError(`Failed to connect: ${errorData.error || 'Authentication failed'}`)
       }
     } catch (error) {
-      console.error('Error getting socket token:', error)
+      console.error('❌ Error getting socket token:', error)
+      setConnectionError(`Connection error: ${error.message}`)
     }
   }
 
@@ -104,12 +111,14 @@ function Messages({ user, onBack }) {
     socketRef.current.on('connect', () => {
       console.log('✅ Socket connected!')
       setConnected(true)
+      setConnectionError(null)
       socketRef.current.emit('join_chat')
     })
 
     socketRef.current.on('disconnect', (reason) => {
       console.log('❌ Socket disconnected:', reason)
       setConnected(false)
+      setConnectionError(`Disconnected: ${reason}`)
     })
 
     socketRef.current.on('new_message', (message) => {
@@ -152,12 +161,14 @@ function Messages({ user, onBack }) {
     })
 
     socketRef.current.on('error', (error) => {
-      console.error('Socket error:', error)
+      console.error('❌ Socket error:', error)
+      setConnectionError(`Socket error: ${error.message || 'Unknown error'}`)
     })
 
     socketRef.current.on('connect_error', (error) => {
-      console.error('Socket connection error:', error.message)
+      console.error('❌ Socket connection error:', error.message)
       setConnected(false)
+      setConnectionError(`Connection failed: ${error.message}`)
     })
   }
 
@@ -170,7 +181,8 @@ function Messages({ user, onBack }) {
     if (uploading) return
     
     if (!socketRef.current || !connected) {
-      alert('Not connected to chat server. Please wait...')
+      console.log('❌ Cannot send: not connected. Socket exists:', !!socketRef.current, 'Connected:', connected)
+      alert('Not connected to chat server. Check your connection and try refreshing the page.')
       return
     }
 
@@ -308,6 +320,13 @@ function Messages({ user, onBack }) {
                title={connected ? 'Connected' : 'Disconnected'} />
         </div>
       </header>
+
+      {/* Connection Error Banner */}
+      {connectionError && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 px-4 py-3 text-sm">
+          <p className="text-yellow-800 font-medium">⚠️ {connectionError}</p>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
