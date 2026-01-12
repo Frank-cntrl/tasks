@@ -40,10 +40,13 @@ function CollaborativeBoard({ user, board, onBack }) {
   const fileInputRef = useRef(null)
   const saveTimeoutRef = useRef(null)
   const cursorThrottleRef = useRef(null)
+  const changesBroadcastRef = useRef(null)
   const isApplyingRemote = useRef(false)
   const pendingSnapshotRef = useRef(null)
   const mountedRef = useRef(true)
   const storeCleanupRef = useRef(null)
+  const pendingChangesRef = useRef([])
+  const lastBroadcastRef = useRef(0)
 
   // Cleanup on unmount
   useEffect(() => {
@@ -94,17 +97,23 @@ function CollaborativeBoard({ user, board, onBack }) {
     
     log('📥 Loading snapshot into editor...')
     isApplyingRemote.current = true
-    try {
-      loadSnapshot(editorRef.current.store, snapshot)
-      log('📥 ✅ Snapshot loaded')
-    } catch (error) {
-      logError('Failed to load snapshot:', error)
-    } finally {
-      // Delay resetting flag to ensure all change events are ignored
-      setTimeout(() => {
-        isApplyingRemote.current = false
-      }, 100)
-    }
+    
+    // Use requestAnimationFrame for smoother loading
+    requestAnimationFrame(() => {
+      try {
+        if (editorRef.current && mountedRef.current) {
+          loadSnapshot(editorRef.current.store, snapshot)
+          log('📥 ✅ Snapshot loaded')
+        }
+      } catch (error) {
+        logError('Failed to load snapshot:', error)
+      } finally {
+        // Delay resetting flag to ensure all change events are ignored
+        setTimeout(() => {
+          isApplyingRemote.current = false
+        }, 200) // Longer delay for snapshot loading
+      }
+    })
   }, [])
 
   // Initialize Socket.IO
@@ -162,6 +171,7 @@ function CollaborativeBoard({ user, board, onBack }) {
       }
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
       if (cursorThrottleRef.current) clearTimeout(cursorThrottleRef.current)
+      if (changesBroadcastRef.current) clearTimeout(changesBroadcastRef.current)
     }
   }, [boardId])
 
@@ -266,48 +276,68 @@ function CollaborativeBoard({ user, board, onBack }) {
         return
       }
 
+      // Set flag to ignore our own store changes while applying remote ones
       isApplyingRemote.current = true
       
-      try {
-        const editor = editorRef.current
-        
-        data.changes.forEach((changeSet) => {
-          // Added records
-          if (changeSet.added) {
-            const records = Object.values(changeSet.added)
-            if (records.length > 0) {
-              log('📥 Adding', records.length, 'records')
-              editor.store.put(records)
+      // Use requestAnimationFrame to ensure smooth application
+      requestAnimationFrame(() => {
+        try {
+          const editor = editorRef.current
+          if (!editor || !mountedRef.current) return
+          
+          // Batch all changes together for better performance
+          const allRecordsToAdd = []
+          const allRecordsToUpdate = []
+          const allIdsToRemove = []
+          
+          data.changes.forEach((changeSet) => {
+            // Added records
+            if (changeSet.added) {
+              const records = Object.values(changeSet.added)
+              allRecordsToAdd.push(...records)
             }
+            
+            // Updated records - handle [from, to] tuple format
+            if (changeSet.updated) {
+              const records = Object.values(changeSet.updated).map(update => 
+                Array.isArray(update) ? update[1] : update
+              )
+              allRecordsToUpdate.push(...records)
+            }
+            
+            // Removed records
+            if (changeSet.removed) {
+              const ids = Object.keys(changeSet.removed)
+              allIdsToRemove.push(...ids)
+            }
+          })
+          
+          // Apply all changes in batches
+          if (allRecordsToAdd.length > 0) {
+            log('📥 Adding', allRecordsToAdd.length, 'records')
+            editor.store.put(allRecordsToAdd)
           }
           
-          // Updated records - handle [from, to] tuple format
-          if (changeSet.updated) {
-            const records = Object.values(changeSet.updated).map(update => 
-              Array.isArray(update) ? update[1] : update
-            )
-            if (records.length > 0) {
-              log('📥 Updating', records.length, 'records')
-              editor.store.put(records)
-            }
+          if (allRecordsToUpdate.length > 0) {
+            log('📥 Updating', allRecordsToUpdate.length, 'records')
+            editor.store.put(allRecordsToUpdate)
           }
           
-          // Removed records
-          if (changeSet.removed) {
-            const ids = Object.keys(changeSet.removed)
-            if (ids.length > 0) {
-              log('📥 Removing', ids.length, 'records')
-              editor.store.remove(ids)
-            }
+          if (allIdsToRemove.length > 0) {
+            log('📥 Removing', allIdsToRemove.length, 'records')
+            editor.store.remove(allIdsToRemove)
           }
-        })
-        
-        log('📥 ✅ Changes applied')
-      } catch (error) {
-        logError('Error applying changes:', error)
-      } finally {
-        isApplyingRemote.current = false
-      }
+          
+          log('📥 ✅ Changes applied')
+        } catch (error) {
+          logError('Error applying changes:', error)
+        } finally {
+          // Delay resetting the flag to ensure all subsequent change events are ignored
+          setTimeout(() => {
+            isApplyingRemote.current = false
+          }, 16) // One animation frame delay
+        }
+      })
     })
 
     return socket
@@ -325,7 +355,7 @@ function CollaborativeBoard({ user, board, onBack }) {
       pendingSnapshotRef.current = null
     }
 
-    // Set up store listener for changes
+    // Set up store listener for changes with throttling
     const cleanup = editor.store.listen((entry) => {
       // Skip if applying remote changes or loading snapshot
       if (isApplyingRemote.current) return
@@ -341,34 +371,72 @@ function CollaborativeBoard({ user, board, onBack }) {
       
       if (!hasAdded && !hasUpdated && !hasRemoved) return
       
-      log('📤 Local change:', {
+      // Batch changes to reduce network traffic
+      pendingChangesRef.current.push(changes)
+      
+      log('📤 Local change queued:', {
         added: hasAdded ? Object.keys(changes.added).length : 0,
         updated: hasUpdated ? Object.keys(changes.updated).length : 0,
         removed: hasRemoved ? Object.keys(changes.removed).length : 0,
+        pendingCount: pendingChangesRef.current.length
       })
       
-      // Send changes via socket
-      if (socketRef.current?.connected) {
-        log('📤 Sending via socket...')
+      // Throttle broadcasts to prevent flooding
+      if (changesBroadcastRef.current) {
+        clearTimeout(changesBroadcastRef.current)
+      }
+      
+      changesBroadcastRef.current = setTimeout(() => {
+        if (!socketRef.current?.connected || pendingChangesRef.current.length === 0) {
+          if (pendingChangesRef.current.length > 0) {
+            log('📤 ⚠️ Socket not connected, discarding', pendingChangesRef.current.length, 'changes')
+          }
+          pendingChangesRef.current = []
+          return
+        }
+        
+        const changesToSend = [...pendingChangesRef.current]
+        pendingChangesRef.current = []
+        
+        const now = Date.now()
+        if (now - lastBroadcastRef.current < 50) {
+          // Too frequent, queue for next batch
+          pendingChangesRef.current.push(...changesToSend)
+          changesBroadcastRef.current = setTimeout(() => {
+            // Retry after delay
+            const retryChanges = [...pendingChangesRef.current]
+            pendingChangesRef.current = []
+            if (retryChanges.length > 0 && socketRef.current?.connected) {
+              log('📤 Sending batched changes:', retryChanges.length)
+              socketRef.current.emit('board_changes', {
+                boardId,
+                changes: retryChanges,
+              })
+              lastBroadcastRef.current = Date.now()
+            }
+          }, 100)
+          return
+        }
+        
+        log('📤 Sending batched changes:', changesToSend.length)
         socketRef.current.emit('board_changes', {
           boardId,
-          changes: [changes],
+          changes: changesToSend,
         })
+        lastBroadcastRef.current = now
         log('📤 ✅ Sent')
-      } else {
-        log('📤 ⚠️ Socket not connected, skipping broadcast')
-      }
+      }, 16) // Batch changes within one frame
 
       // Debounce auto-save
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
       saveTimeoutRef.current = setTimeout(() => {
         saveBoard()
       }, 2000)
-    }, { source: 'all', scope: 'document' })
+    }, { source: 'user', scope: 'document' })
 
     storeCleanupRef.current = cleanup
 
-    // Track cursor for broadcasting
+    // Track cursor for broadcasting with less aggressive throttling
     const container = editor.getContainer()
     const handlePointerMove = (e) => {
       const rect = container.getBoundingClientRect()
@@ -377,14 +445,17 @@ function CollaborativeBoard({ user, board, onBack }) {
       
       setCursorPos({ x: Math.round(e.clientX), y: Math.round(e.clientY) })
       
+      // Less aggressive cursor throttling to not interfere with drawing
       if (!cursorThrottleRef.current && socketRef.current?.connected) {
         cursorThrottleRef.current = setTimeout(() => {
-          socketRef.current?.emit('board_cursor', { boardId, x, y })
+          if (socketRef.current?.connected) {
+            socketRef.current.emit('board_cursor', { boardId, x, y })
+          }
           cursorThrottleRef.current = null
-        }, 50)
+        }, 100) // Increased from 50ms to 100ms
       }
     }
-    container.addEventListener('pointermove', handlePointerMove)
+    container.addEventListener('pointermove', handlePointerMove, { passive: true })
 
     // Track tool and zoom
     const sessionCleanup = editor.store.listen(() => {
@@ -396,6 +467,9 @@ function CollaborativeBoard({ user, board, onBack }) {
 
     return () => {
       container.removeEventListener('pointermove', handlePointerMove)
+      if (changesBroadcastRef.current) {
+        clearTimeout(changesBroadcastRef.current)
+      }
       sessionCleanup()
       cleanup()
     }
