@@ -362,7 +362,8 @@ function Messages({ user, onBack }) {
                         <img 
                           src={message.imageUrl} 
                           alt="Shared" 
-                          className="rounded-lg mb-2 max-w-full"
+                          className="rounded-lg mb-2 max-w-full max-h-64 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(message.imageUrl, '_blank')}
                         />
                       )}
                       {message.content && (
