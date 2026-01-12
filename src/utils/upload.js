@@ -1,6 +1,18 @@
 import { API_URL } from '../config'
 
 /**
+ * Get authorization headers for API requests
+ */
+function getAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' }
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return headers
+}
+
+/**
  * Upload a single image to Cloudinary via backend
  * @param {File|string} image - File object or base64 string
  * @param {string} folder - Folder name: 'messages', 'documents', 'moodboard', 'collage', 'profile'
@@ -16,7 +28,7 @@ export async function uploadImage(image, folder = 'messages') {
 
   const response = await fetch(`${API_URL}/api/upload/image`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     credentials: 'include',
     body: JSON.stringify({ image: imageData, folder }),
   })
@@ -47,7 +59,7 @@ export async function uploadImages(images, folder = 'messages') {
 
   const response = await fetch(`${API_URL}/api/upload/images`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     credentials: 'include',
     body: JSON.stringify({ images: imageDataArray, folder }),
   })
@@ -66,10 +78,17 @@ export async function uploadImages(images, folder = 'messages') {
  * @returns {Promise<{message: string}>}
  */
 export async function deleteImage(publicId) {
+  const headers = {}
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(
     `${API_URL}/api/upload/image/${encodeURIComponent(publicId)}`,
     {
       method: 'DELETE',
+      headers,
       credentials: 'include',
     }
   )
