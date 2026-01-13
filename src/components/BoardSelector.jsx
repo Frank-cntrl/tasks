@@ -39,23 +39,37 @@ function BoardSelector({ user, onBack, onSelectBoard }) {
 
     setCreating(true)
     try {
+      console.log('Creating board with name:', newBoardName.trim())
       const response = await authFetch('/api/boards', {
         method: 'POST',
         body: JSON.stringify({ name: newBoardName.trim() }),
       })
 
+      console.log('Create board response:', response.status, response.statusText)
+
       if (response.ok) {
         const newBoard = await response.json()
+        console.log('Board created successfully:', newBoard)
         setBoards(prev => [newBoard, ...prev])
         setNewBoardName('')
         setShowCreateModal(false)
       } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to create board')
+        const errorText = await response.text()
+        console.error('Board creation failed:', response.status, errorText)
+        
+        let errorMessage = 'Failed to create board'
+        try {
+          const errorJson = JSON.parse(errorText)
+          errorMessage = errorJson.error || errorMessage
+        } catch (e) {
+          // If response isn't JSON, show the status and text
+          errorMessage = `Server error (${response.status}): ${errorText.substring(0, 100)}...`
+        }
+        alert(errorMessage)
       }
     } catch (error) {
       console.error('Failed to create board:', error)
-      alert('Failed to create board')
+      alert(`Network error: ${error.message}`)
     } finally {
       setCreating(false)
     }

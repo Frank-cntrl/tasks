@@ -571,10 +571,10 @@ function CollaborativeBoard({ user, board, onBack }) {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-400">
-      {/* Toolbar */}
-      <div className="flex-shrink-0 bg-gray-300 border-b-2 border-gray-600">
-        <div className="flex items-center justify-between px-2 py-1.5 flex-wrap gap-2">
+    <div className="h-screen bg-gray-400 flex flex-col keyboard-avoid">
+      {/* Desktop Toolbar */}
+      <div className="hidden md:flex flex-shrink-0 bg-gray-300 border-b-2 border-gray-600">
+        <div className="flex items-center justify-between px-2 py-1.5 flex-wrap gap-2 w-full">
           <div className="flex items-center gap-2">
             <button
               onClick={onBack}
@@ -583,8 +583,8 @@ function CollaborativeBoard({ user, board, onBack }) {
               <ArrowBackIcon sx={{ fontSize: 16 }} />
               Back
             </button>
-            <div className="h-6 w-px bg-gray-600 hidden sm:block" />
-            <span className="text-sm font-bold text-gray-800 px-2 truncate max-w-[150px] sm:max-w-none">
+            <div className="h-6 w-px bg-gray-600" />
+            <span className="text-sm font-bold text-gray-800 px-2 truncate max-w-[200px]">
               {boardName}
             </span>
           </div>
@@ -596,7 +596,7 @@ function CollaborativeBoard({ user, board, onBack }) {
               className="px-3 py-1 bg-gray-300 border-2 border-t-white border-l-white border-r-gray-600 border-b-gray-600 hover:border-t-gray-600 hover:border-l-gray-600 hover:border-r-white hover:border-b-white text-xs font-bold disabled:opacity-50 flex items-center gap-1"
             >
               <SaveIcon sx={{ fontSize: 14 }} />
-              <span className="hidden sm:inline">{saving ? 'Saving...' : 'Save'}</span>
+              {saving ? 'Saving...' : 'Save'}
             </button>
 
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
@@ -605,7 +605,7 @@ function CollaborativeBoard({ user, board, onBack }) {
               className="px-3 py-1 bg-gray-300 border-2 border-t-white border-l-white border-r-gray-600 border-b-gray-600 hover:border-t-gray-600 hover:border-l-gray-600 hover:border-r-white hover:border-b-white text-xs font-bold flex items-center gap-1"
             >
               <ImageIcon sx={{ fontSize: 14 }} />
-              <span className="hidden sm:inline">Image</span>
+              Image
             </button>
 
             <button
@@ -613,7 +613,7 @@ function CollaborativeBoard({ user, board, onBack }) {
               className="px-3 py-1 bg-gray-300 border-2 border-t-white border-l-white border-r-gray-600 border-b-gray-600 hover:border-t-gray-600 hover:border-l-gray-600 hover:border-r-white hover:border-b-white text-xs font-bold flex items-center gap-1"
             >
               <ShareIcon sx={{ fontSize: 14 }} />
-              <span className="hidden sm:inline">Share</span>
+              Share
             </button>
 
             <div className="flex items-center gap-1 px-2">
@@ -625,6 +625,28 @@ function CollaborativeBoard({ user, board, onBack }) {
 
         {connectionError && (
           <div className="px-2 py-1 bg-yellow-200 border-t border-yellow-600 text-xs">⚠️ {connectionError}</div>
+        )}
+      </div>
+
+      {/* Mobile Header - Minimal */}
+      <div className="md:hidden flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 pt-safe">
+        <div className="flex items-center justify-between px-3 py-2">
+          <button
+            onClick={onBack}
+            className="btn-mobile w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white touch-manipulation"
+          >
+            <ArrowBackIcon sx={{ fontSize: 18 }} />
+          </button>
+          <h1 className="text-white font-bold text-sm truncate max-w-[200px]">{boardName}</h1>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
+            <span className="text-white/70 text-xs">{totalOnline}</span>
+          </div>
+        </div>
+        {connectionError && (
+          <div className="px-3 py-2 bg-yellow-500/20 border-t border-yellow-400/30">
+            <p className="text-yellow-200 text-xs">⚠️ {connectionError}</p>
+          </div>
         )}
       </div>
 
@@ -640,11 +662,11 @@ function CollaborativeBoard({ user, board, onBack }) {
               className="absolute transition-all duration-75"
               style={{ left: cursor.x, top: cursor.y, transform: 'translate(-2px, -2px)' }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill={cursor.color} style={{ filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.3))' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={cursor.color} style={{ filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.3))' }}>
                 <path d="M5.65 3.15l12.6 10.5a1 1 0 0 1-.65 1.75H12.4l-2.3 5.75a1 1 0 0 1-1.85 0L5.95 15.4l-3.3 1.1a1 1 0 0 1-1.25-1.25l4.25-12.1z" />
               </svg>
               <div
-                className="absolute left-5 top-4 px-1.5 py-0.5 text-xs font-bold text-white rounded whitespace-nowrap"
+                className="absolute left-4 top-3 px-1.5 py-0.5 text-xs font-bold text-white rounded whitespace-nowrap"
                 style={{ backgroundColor: cursor.color, boxShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}
               >
                 {cursor.username}
@@ -652,16 +674,50 @@ function CollaborativeBoard({ user, board, onBack }) {
             </div>
           ))}
         </div>
+
+        {/* Mobile Floating Toolbar */}
+        <div className="md:hidden absolute bottom-4 left-4 right-4 pointer-events-none">
+          <div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl p-3 shadow-2xl border border-gray-600/50 pointer-events-auto">
+            <div className="flex items-center justify-around gap-2">
+              <button
+                onClick={saveBoard}
+                disabled={saving}
+                className="btn-mobile w-12 h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-xl disabled:opacity-50 flex items-center justify-center touch-manipulation transition-all active:scale-95"
+              >
+                <SaveIcon sx={{ fontSize: 20 }} />
+              </button>
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-mobile w-12 h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center touch-manipulation transition-all active:scale-95"
+              >
+                <ImageIcon sx={{ fontSize: 20 }} />
+              </button>
+              
+              <button
+                onClick={handleShareLink}
+                className="btn-mobile w-12 h-12 bg-green-600 hover:bg-green-500 text-white rounded-xl flex items-center justify-center touch-manipulation transition-all active:scale-95"
+              >
+                <ShareIcon sx={{ fontSize: 20 }} />
+              </button>
+              
+              <div className="bg-gray-700 rounded-lg px-3 py-2 min-w-[60px] text-center">
+                <div className="text-white text-xs font-medium">{zoom}%</div>
+                <div className="text-gray-400 text-xs">{currentTool}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Status Bar */}
-      <div className="flex-shrink-0 bg-gray-300 border-t-2 border-gray-600 px-2 py-1">
-        <div className="flex items-center justify-between text-xs flex-wrap gap-1">
+      {/* Desktop Status Bar */}
+      <div className="hidden md:flex flex-shrink-0 bg-gray-300 border-t-2 border-gray-600 px-2 py-1">
+        <div className="flex items-center justify-between text-xs flex-wrap gap-1 w-full">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">
               <span className="font-bold">{currentTool}</span>
             </div>
-            <div className="px-2 py-0.5 bg-gray-400 border border-gray-600 hidden sm:block">
+            <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">
               X:{cursorPos.x} Y:{cursorPos.y}
             </div>
             <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">{zoom}%</div>
@@ -669,7 +725,7 @@ function CollaborativeBoard({ user, board, onBack }) {
           
           <div className="flex items-center gap-2">
             {connectedUsers.length > 0 && (
-              <div className="px-2 py-0.5 bg-gray-400 border border-gray-600 hidden sm:block">
+              <div className="px-2 py-0.5 bg-gray-400 border border-gray-600">
                 Also here: {connectedUsers.map(u => u.username).join(', ')}
               </div>
             )}

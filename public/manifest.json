@@ -1,0 +1,36 @@
+{
+  "name": "Frella - Collaborative App for Frank & Ella",
+  "short_name": "Frella",
+  "description": "A collaborative platform for productivity, creativity, and connection",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#8b5cf6",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "social", "collaboration"],
+  "lang": "en",
+  "shortcuts": [
+    {
+      "name": "Messages",
+      "short_name": "Chat",
+      "description": "Open direct messages",
+      "url": "/",
+      "icons": [{ "src": "/vite.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Drawing Board",
+      "short_name": "Draw",
+      "description": "Open collaborative drawing",
+      "url": "/",
+      "icons": [{ "src": "/vite.svg", "sizes": "192x192" }]
+    }
+  ]
+}

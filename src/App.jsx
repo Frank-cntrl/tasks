@@ -97,7 +97,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-purple-900">
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-purple-900 pt-safe pb-safe">
         <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
       </div>
     )

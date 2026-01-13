@@ -278,43 +278,43 @@ function Messages({ user, onBack }) {
   const partnerName = user.id === 1 ? 'Ella' : 'Frank'
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-5 py-4 shadow-lg">
+    <div className="h-screen bg-gray-900 flex flex-col keyboard-avoid">
+      {/* Header with safe area */}
+      <header className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 md:px-5 py-3 md:py-4 shadow-lg pt-safe flex-shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="w-10 h-10 flex items-center justify-center rounded-xl 
-                     bg-white/20 hover:bg-white/30 transition-all duration-200"
+            className="btn-mobile w-10 h-10 flex items-center justify-center rounded-xl 
+                     bg-white/20 hover:bg-white/30 transition-all duration-200 touch-manipulation"
           >
             <ArrowBackIcon />
           </button>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <ChatIcon />
-              <h1 className="text-xl font-bold">Messages</h1>
+              <ChatIcon className="flex-shrink-0" />
+              <h1 className="text-lg md:text-xl font-bold truncate">Messages</h1>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <div className={`w-2 h-2 rounded-full ${partnerOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
-              <span className="text-sm text-purple-200">
+              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${partnerOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+              <span className="text-xs md:text-sm text-purple-200 truncate">
                 {partnerTyping ? `${partnerName} is typing...` : 
                  partnerOnline ? `${partnerName} is online` : `${partnerName} is offline`}
               </span>
             </div>
           </div>
-          <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} 
+          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${connected ? 'bg-green-400' : 'bg-red-400'}`} 
                title={connected ? 'Connected' : 'Disconnected'} />
         </div>
       </header>
 
       {/* Connection Error Banner */}
       {connectionError && (
-        <div className="bg-yellow-900/50 border-l-4 border-yellow-500 px-4 py-3 text-sm flex items-center justify-between">
-          <p className="text-yellow-200 font-medium">⚠️ {connectionError}</p>
+        <div className="bg-yellow-900/50 border-l-4 border-yellow-500 px-4 py-3 text-sm flex items-center justify-between flex-shrink-0">
+          <p className="text-yellow-200 font-medium text-xs md:text-sm flex-1 pr-2">⚠️ {connectionError}</p>
           {!connected && (
             <button
               onClick={initSocket}
-              className="ml-2 px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-medium"
+              className="btn-mobile px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-medium touch-manipulation flex-shrink-0"
             >
               Retry
             </button>
@@ -322,17 +322,17 @@ function Messages({ user, onBack }) {
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      {/* Messages - Scrollable area */}
+      <div className="flex-1 overflow-y-auto overscroll-behavior-contain px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4 min-h-0">
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-10 h-10 border-4 border-purple-400/30 border-t-purple-500 rounded-full animate-spin" />
+            <div className="w-8 h-8 md:w-10 md:h-10 border-4 border-purple-400/30 border-t-purple-500 rounded-full animate-spin" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center py-20">
-            <ChatIcon sx={{ fontSize: 64 }} className="text-gray-700 mb-4" />
-            <p className="text-gray-400">No messages yet</p>
-            <p className="text-gray-500 text-sm">Start the conversation!</p>
+          <div className="text-center py-12 md:py-20">
+            <ChatIcon sx={{ fontSize: { xs: 48, md: 64 } }} className="text-gray-700 mb-4" />
+            <p className="text-gray-400 text-sm md:text-base">No messages yet</p>
+            <p className="text-gray-500 text-xs md:text-sm">Start the conversation!</p>
           </div>
         ) : (
           Object.entries(groupedMessages).map(([date, msgs]) => (
