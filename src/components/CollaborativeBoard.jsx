@@ -10,6 +10,7 @@ import CircleIcon from '@mui/icons-material/Circle'
 import { API_URL } from '../config'
 import { uploadImage, validateImage } from '../utils/upload'
 import { authFetch } from '../utils/api'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // Debug logging helper
 const DEBUG = true
@@ -571,18 +572,31 @@ function CollaborativeBoard({ user, board, onBack }) {
   }
 
   return (
-    <div className="h-screen bg-gray-400 flex flex-col keyboard-avoid">
+    <motion.div 
+      className="h-screen bg-gray-400 flex flex-col keyboard-avoid"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Desktop Toolbar */}
-      <div className="hidden md:flex flex-shrink-0 bg-gray-300 border-b-2 border-gray-600">
+      <motion.div 
+        className="hidden md:flex flex-shrink-0 bg-gray-300 border-b-2 border-gray-600"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
         <div className="flex items-center justify-between px-2 py-1.5 flex-wrap gap-2 w-full">
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
               onClick={onBack}
               className="px-2 py-1 bg-gray-300 border-2 border-t-white border-l-white border-r-gray-600 border-b-gray-600 hover:border-t-gray-600 hover:border-l-gray-600 hover:border-r-white hover:border-b-white text-xs font-bold flex items-center gap-1"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <ArrowBackIcon sx={{ fontSize: 16 }} />
               Back
-            </button>
+            </motion.button>
             <div className="h-6 w-px bg-gray-600" />
             <span className="text-sm font-bold text-gray-800 px-2 truncate max-w-[200px]">
               {boardName}
@@ -626,7 +640,7 @@ function CollaborativeBoard({ user, board, onBack }) {
         {connectionError && (
           <div className="px-2 py-1 bg-yellow-200 border-t border-yellow-600 text-xs">⚠️ {connectionError}</div>
         )}
-      </div>
+      </motion.div>
 
       {/* Mobile Header - Minimal */}
       <div className="md:hidden flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 pt-safe">
@@ -649,6 +663,48 @@ function CollaborativeBoard({ user, board, onBack }) {
           </div>
         )}
       </div>
+
+      {/* Mobile Toolbar - Top Position */}
+      <motion.div 
+        className="md:hidden flex-shrink-0 bg-gray-800/95 backdrop-blur-sm border-b border-gray-600/50"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex items-center justify-around gap-2 px-3 py-2">
+          <motion.button
+            onClick={saveBoard}
+            disabled={saving}
+            className="btn-mobile w-11 h-11 bg-purple-600 hover:bg-purple-500 text-white rounded-xl disabled:opacity-50 flex items-center justify-center touch-manipulation transition-all active:scale-95"
+            whileTap={{ scale: 0.9 }}
+            animate={saving ? { rotate: 360 } : { rotate: 0 }}
+            transition={{ rotate: { duration: 1, repeat: saving ? Infinity : 0, ease: "linear" } }}
+          >
+            <SaveIcon sx={{ fontSize: 20 }} />
+          </motion.button>
+          
+          <motion.button
+            onClick={() => fileInputRef.current?.click()}
+            className="btn-mobile w-11 h-11 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center touch-manipulation transition-all active:scale-95"
+            whileTap={{ scale: 0.9 }}
+          >
+            <ImageIcon sx={{ fontSize: 20 }} />
+          </motion.button>
+          
+          <motion.button
+            onClick={handleShareLink}
+            className="btn-mobile w-11 h-11 bg-green-600 hover:bg-green-500 text-white rounded-xl flex items-center justify-center touch-manipulation transition-all active:scale-95"
+            whileTap={{ scale: 0.9 }}
+          >
+            <ShareIcon sx={{ fontSize: 20 }} />
+          </motion.button>
+          
+          <div className="bg-gray-700 rounded-xl px-3 py-1.5 text-center">
+            <div className="text-white text-xs font-medium">{zoom}%</div>
+            <div className="text-gray-400 text-[10px]">{currentTool}</div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Canvas with Remote Cursors */}
       <div className="flex-1 relative overflow-hidden">
@@ -673,40 +729,6 @@ function CollaborativeBoard({ user, board, onBack }) {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Mobile Floating Toolbar */}
-        <div className="md:hidden absolute bottom-4 left-4 right-4 pointer-events-none">
-          <div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl p-3 shadow-2xl border border-gray-600/50 pointer-events-auto">
-            <div className="flex items-center justify-around gap-2">
-              <button
-                onClick={saveBoard}
-                disabled={saving}
-                className="btn-mobile w-12 h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-xl disabled:opacity-50 flex items-center justify-center touch-manipulation transition-all active:scale-95"
-              >
-                <SaveIcon sx={{ fontSize: 20 }} />
-              </button>
-              
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="btn-mobile w-12 h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center touch-manipulation transition-all active:scale-95"
-              >
-                <ImageIcon sx={{ fontSize: 20 }} />
-              </button>
-              
-              <button
-                onClick={handleShareLink}
-                className="btn-mobile w-12 h-12 bg-green-600 hover:bg-green-500 text-white rounded-xl flex items-center justify-center touch-manipulation transition-all active:scale-95"
-              >
-                <ShareIcon sx={{ fontSize: 20 }} />
-              </button>
-              
-              <div className="bg-gray-700 rounded-lg px-3 py-2 min-w-[60px] text-center">
-                <div className="text-white text-xs font-medium">{zoom}%</div>
-                <div className="text-gray-400 text-xs">{currentTool}</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -735,7 +757,7 @@ function CollaborativeBoard({ user, board, onBack }) {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

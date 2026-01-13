@@ -10,6 +10,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import { API_URL } from '../config'
 import { uploadImage, validateImage } from '../utils/upload'
 import { authFetch } from '../utils/api'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function Messages({ user, onBack }) {
   const [messages, setMessages] = useState([])
@@ -278,49 +279,93 @@ function Messages({ user, onBack }) {
   const partnerName = user.id === 1 ? 'Ella' : 'Frank'
 
   return (
-    <div className="h-screen bg-gray-900 flex flex-col keyboard-avoid">
+    <motion.div 
+      className="h-screen bg-gray-900 flex flex-col keyboard-avoid"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Header with safe area */}
-      <header className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 md:px-5 py-3 md:py-4 shadow-lg pt-safe flex-shrink-0">
+      <motion.header 
+        className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 md:px-5 py-3 md:py-4 shadow-lg pt-safe flex-shrink-0"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
         <div className="flex items-center gap-3">
-          <button
+          <motion.button
             onClick={onBack}
             className="btn-mobile w-10 h-10 flex items-center justify-center rounded-xl 
                      bg-white/20 hover:bg-white/30 transition-all duration-200 touch-manipulation"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
             <ArrowBackIcon />
-          </button>
+          </motion.button>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <ChatIcon className="flex-shrink-0" />
               <h1 className="text-lg md:text-xl font-bold truncate">Messages</h1>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${partnerOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
-              <span className="text-xs md:text-sm text-purple-200 truncate">
+              <motion.div 
+                className={`w-2 h-2 rounded-full flex-shrink-0`}
+                animate={{ 
+                  backgroundColor: partnerOnline ? '#4ade80' : '#9ca3af',
+                  scale: partnerOnline ? [1, 1.2, 1] : 1
+                }}
+                transition={{ 
+                  backgroundColor: { duration: 0.3 },
+                  scale: { duration: 1, repeat: partnerOnline ? Infinity : 0 }
+                }}
+              />
+              <motion.span 
+                className="text-xs md:text-sm text-purple-200 truncate"
+                animate={{ opacity: partnerTyping ? [1, 0.5, 1] : 1 }}
+                transition={{ duration: 1, repeat: partnerTyping ? Infinity : 0 }}
+              >
                 {partnerTyping ? `${partnerName} is typing...` : 
                  partnerOnline ? `${partnerName} is online` : `${partnerName} is offline`}
-              </span>
+              </motion.span>
             </div>
           </div>
-          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${connected ? 'bg-green-400' : 'bg-red-400'}`} 
-               title={connected ? 'Connected' : 'Disconnected'} />
+          <motion.div 
+            className={`w-3 h-3 rounded-full flex-shrink-0`}
+            animate={{ 
+              backgroundColor: connected ? '#4ade80' : '#ef4444',
+              scale: connected ? [1, 1.1, 1] : [1, 0.8, 1]
+            }}
+            transition={{ duration: 1, repeat: Infinity }}
+            title={connected ? 'Connected' : 'Disconnected'}
+          />
         </div>
-      </header>
+      </motion.header>
 
       {/* Connection Error Banner */}
-      {connectionError && (
-        <div className="bg-yellow-900/50 border-l-4 border-yellow-500 px-4 py-3 text-sm flex items-center justify-between flex-shrink-0">
-          <p className="text-yellow-200 font-medium text-xs md:text-sm flex-1 pr-2">⚠️ {connectionError}</p>
-          {!connected && (
-            <button
-              onClick={initSocket}
-              className="btn-mobile px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-medium touch-manipulation flex-shrink-0"
-            >
-              Retry
-            </button>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {connectionError && (
+          <motion.div 
+            className="bg-yellow-900/50 border-l-4 border-yellow-500 px-4 py-3 text-sm flex items-center justify-between flex-shrink-0"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <p className="text-yellow-200 font-medium text-xs md:text-sm flex-1 pr-2">⚠️ {connectionError}</p>
+            {!connected && (
+              <motion.button
+                onClick={initSocket}
+                className="btn-mobile px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-medium touch-manipulation flex-shrink-0"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Retry
+              </motion.button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Messages - Scrollable area */}
       <div className="flex-1 overflow-y-auto overscroll-behavior-contain px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4 min-h-0">
@@ -455,7 +500,7 @@ function Messages({ user, onBack }) {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
