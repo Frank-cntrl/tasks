@@ -280,7 +280,7 @@ function Messages({ user, onBack }) {
 
   return (
     <motion.div 
-      className="h-screen bg-gray-900 flex flex-col overflow-hidden"
+      className="h-screen-safe bg-gray-900 flex flex-col overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -288,7 +288,8 @@ function Messages({ user, onBack }) {
     >
       {/* Header with safe area */}
       <header 
-        className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 md:px-5 py-3 md:py-4 shadow-lg pt-safe flex-shrink-0"
+        className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 md:px-5 py-3 md:py-4 shadow-lg flex-shrink-0"
+        style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
       >
         <div className="flex items-center gap-3">
           <button
@@ -424,7 +425,10 @@ function Messages({ user, onBack }) {
       )}
 
       {/* Input */}
-      <div className="bg-gray-800 border-t border-gray-700 px-4 py-3 pb-safe flex-shrink-0">
+      <div 
+        className="bg-gray-800 border-t border-gray-700 px-4 pt-3 flex-shrink-0"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}
+      >
         <div className="flex items-end gap-2">
           <input
             type="file"
