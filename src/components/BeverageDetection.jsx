@@ -33,30 +33,41 @@ function BeverageDetection({ user, onBack }) {
         audio: false
       }
       
-      console.log('Requesting camera with constraints:', constraints)
+      console.log('[BeverageDetection] Requesting camera with constraints:', constraints)
+      console.log('[BeverageDetection] videoRef.current:', videoRef.current)
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
       
-      console.log('Got stream:', stream)
-      console.log('Video tracks:', stream.getVideoTracks())
+      console.log('[BeverageDetection] Got stream:', stream)
+      console.log('[BeverageDetection] Video tracks:', stream.getVideoTracks())
+      console.log('[BeverageDetection] Track settings:', stream.getVideoTracks()[0]?.getSettings())
       
       if (videoRef.current) {
+        console.log('[BeverageDetection] Setting srcObject on video element')
         videoRef.current.srcObject = stream
         streamRef.current = stream
+        
+        // Log video element state
+        console.log('[BeverageDetection] Video element readyState:', videoRef.current.readyState)
+        console.log('[BeverageDetection] Video element paused:', videoRef.current.paused)
         
         // For iOS Safari - must explicitly play
         try {
           await videoRef.current.play()
-          console.log('Video playing')
+          console.log('[BeverageDetection] Video playing successfully')
+          console.log('[BeverageDetection] Video dimensions:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight)
         } catch (playErr) {
-          console.log('Autoplay blocked, waiting for user interaction:', playErr)
+          console.log('[BeverageDetection] Autoplay blocked:', playErr)
         }
         
+        console.log('[BeverageDetection] Setting cameraActive to true')
         setCameraActive(true)
+      } else {
+        console.log('[BeverageDetection] ERROR: videoRef.current is null!')
       }
     } catch (err) {
       setError('Unable to access camera. Please check permissions.')
-      console.error('Camera error:', err)
+      console.error('[BeverageDetection] Camera error:', err)
     }
   }
 
@@ -283,6 +294,47 @@ If you cannot identify a beverage in the image, return:
     return <LocalBarIcon sx={{ fontSize: 40 }} />
   }
 
+  // Debug: Log when video events fire
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleLoadedMetadata = () => {
+      console.log('[BeverageDetection] Video loadedmetadata event')
+      console.log('[BeverageDetection] Video size:', video.videoWidth, 'x', video.videoHeight)
+    }
+    
+    const handleLoadedData = () => {
+      console.log('[BeverageDetection] Video loadeddata event')
+    }
+    
+    const handleCanPlay = () => {
+      console.log('[BeverageDetection] Video canplay event')
+    }
+    
+    const handlePlaying = () => {
+      console.log('[BeverageDetection] Video playing event')
+    }
+    
+    const handleError = (e) => {
+      console.error('[BeverageDetection] Video error event:', e)
+    }
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata)
+    video.addEventListener('loadeddata', handleLoadedData)
+    video.addEventListener('canplay', handleCanPlay)
+    video.addEventListener('playing', handlePlaying)
+    video.addEventListener('error', handleError)
+
+    return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      video.removeEventListener('loadeddata', handleLoadedData)
+      video.removeEventListener('canplay', handleCanPlay)
+      video.removeEventListener('playing', handlePlaying)
+      video.removeEventListener('error', handleError)
+    }
+  }, [])
+
   useEffect(() => {
     return () => {
       stopCamera() // Cleanup on unmount
@@ -318,6 +370,14 @@ If you cannot identify a beverage in the image, return:
       </header>
 
       <div className="p-4 space-y-4">
+        {/* Debug info */}
+        <div className="bg-gray-800 text-xs text-gray-400 p-2 rounded font-mono">
+          cameraActive: {cameraActive ? 'true' : 'false'} | 
+          result: {result ? 'yes' : 'no'} | 
+          loading: {loading ? 'true' : 'false'} |
+          videoRef: {videoRef.current ? 'exists' : 'null'}
+        </div>
+
         {error && (
           <motion.div 
             className="bg-red-900/50 border border-red-500 text-red-200 p-3 rounded-lg"
@@ -354,20 +414,19 @@ If you cannot identify a beverage in the image, return:
           </motion.div>
         ) : null}
         
-        {/* Camera View - always render when active, hide when showing result */}
-        {cameraActive && (
-          <div className={`space-y-4 ${result ? 'hidden' : ''}`}>
-            {/* Video Stream */}
-            <div className="relative bg-black rounded-xl overflow-hidden" style={{ minHeight: '400px' }}>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                webkit-playsinline="true"
-                style={{ 
-                  width: '100%', 
-                  height: '400px', 
+        {/* Video element - always in DOM but hidden when not active */}
+        <div className={`space-y-4 ${!cameraActive || result ? 'hidden' : ''}`}>
+          {/* Video Stream */}
+          <div className="relative bg-black rounded-xl overflow-hidden" style={{ minHeight: '400px' }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              webkit-playsinline="true"
+              style={{ 
+                width: '100%', 
+                height: '400px', 
                   objectFit: 'cover',
                   backgroundColor: '#000'
                 }}
@@ -439,7 +498,6 @@ If you cannot identify a beverage in the image, return:
               </button>
             </div>
           </div>
-        )}
 
         {/* Results */}
         {result && (
