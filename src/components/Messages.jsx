@@ -23,9 +23,7 @@ function Messages({ user, onBack }) {
   const [imageFile, setImageFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [connectionError, setConnectionError] = useState(null)
-  const [viewportHeight, setViewportHeight] = useState('100vh')
-  const [safeAreaTop, setSafeAreaTop] = useState('env(safe-area-inset-top, 0px)')
-  const [safeAreaBottom, setSafeAreaBottom] = useState('env(safe-area-inset-bottom, 0px)')
+  const [isReady, setIsReady] = useState(false)
   
   const socketRef = useRef(null)
   const messagesEndRef = useRef(null)
@@ -36,57 +34,47 @@ function Messages({ user, onBack }) {
   // Partner ID (since there are only 2 users)
   const partnerId = user.id === 1 ? 2 : 1
 
-  // Fix for mobile Safari viewport height and safe area on initial load
+  // iOS Safari viewport fix - force layout recalculation on mount
   useEffect(() => {
-    const updateViewport = () => {
-      // Get the actual viewport height
-      const vh = window.innerHeight
-      setViewportHeight(`${vh}px`)
+    const forceLayoutRecalculation = () => {
+      // Force Safari to recalculate by triggering reflow
+      const scrollPos = window.pageYOffset
+      window.scrollTo(0, scrollPos + 1)
+      window.scrollTo(0, scrollPos)
       
-      // Force safe area calculation by checking if values are available
-      const testDiv = document.createElement('div')
-      testDiv.style.position = 'fixed'
-      testDiv.style.top = '0'
-      testDiv.style.left = '0'
-      testDiv.style.paddingTop = 'env(safe-area-inset-top, 0px)'
-      testDiv.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)'
-      document.body.appendChild(testDiv)
+      // Also trigger resize event which Safari listens to
+      window.dispatchEvent(new Event('resize'))
       
-      const computedStyle = window.getComputedStyle(testDiv)
-      const topPadding = computedStyle.paddingTop
-      const bottomPadding = computedStyle.paddingBottom
+      // Debug log
+      const vv = window.visualViewport
+      console.log('[Messages] Layout recalculation:', {
+        visualViewportHeight: vv?.height,
+        visualViewportOffsetTop: vv?.offsetTop,
+        innerHeight: window.innerHeight,
+        innerWidth: window.innerWidth,
+        documentHeight: document.documentElement.clientHeight
+      })
       
-      // Use computed values if available, otherwise fallback
-      const safeTop = (topPadding && topPadding !== '0px') ? topPadding : '44px' // Fallback for status bar
-      const safeBottom = (bottomPadding && bottomPadding !== '0px') ? bottomPadding : '34px' // Fallback for home indicator
-      
-      setSafeAreaTop(safeTop)
-      setSafeAreaBottom(safeBottom)
-      
-      document.body.removeChild(testDiv)
+      setIsReady(true)
     }
+
+    // Run immediately
+    forceLayoutRecalculation()
     
-    // Set immediately
-    updateViewport()
+    // Run with requestAnimationFrame for next paint
+    requestAnimationFrame(forceLayoutRecalculation)
     
-    // Set after delays to handle Safari's calculations
-    const timeout1 = setTimeout(updateViewport, 100)
-    const timeout2 = setTimeout(updateViewport, 500)
-    
-    // Update on resize/orientation change
-    const handleChange = () => {
-      // Small delay to let Safari recalculate
-      setTimeout(updateViewport, 100)
-    }
-    
-    window.addEventListener('resize', handleChange)
-    window.addEventListener('orientationchange', handleChange)
-    
+    // Run with multiple delays to catch Safari's timing
+    const timeouts = [
+      setTimeout(forceLayoutRecalculation, 0),
+      setTimeout(forceLayoutRecalculation, 50),
+      setTimeout(forceLayoutRecalculation, 100),
+      setTimeout(forceLayoutRecalculation, 200),
+      setTimeout(forceLayoutRecalculation, 500)
+    ]
+
     return () => {
-      clearTimeout(timeout1)
-      clearTimeout(timeout2)
-      window.removeEventListener('resize', handleChange)
-      window.removeEventListener('orientationchange', handleChange)
+      timeouts.forEach(clearTimeout)
     }
   }, [])
 
@@ -339,8 +327,7 @@ function Messages({ user, onBack }) {
   return (
     <motion.div 
       ref={containerRef}
-      className="bg-gray-900 flex flex-col overflow-hidden"
-      style={{ height: viewportHeight }}
+      className="absolute inset-0 bg-gray-900 flex flex-col overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -348,8 +335,7 @@ function Messages({ user, onBack }) {
     >
       {/* Header with safe area */}
       <header 
-        className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 md:px-5 py-3 md:py-4 shadow-lg flex-shrink-0"
-        style={{ paddingTop: safeAreaTop }}
+        className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 md:px-5 py-3 md:py-4 shadow-lg flex-shrink-0 pt-safe"
       >
         <div className="flex items-center gap-3">
           <button
@@ -486,8 +472,7 @@ function Messages({ user, onBack }) {
 
       {/* Input */}
       <div 
-        className="bg-gray-800 border-t border-gray-700 px-4 pt-3 flex-shrink-0"
-        style={{ paddingBottom: safeAreaBottom }}
+        className="bg-gray-800 border-t border-gray-700 px-4 pt-3 pb-safe flex-shrink-0"
       >
         <div className="flex items-end gap-2">
           <input
