@@ -5,6 +5,7 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import { authFetch } from '../utils/api'
+import { motion } from 'framer-motion'
 
 function BoardSelector({ user, onBack, onSelectBoard }) {
   const [boards, setBoards] = useState([])
@@ -127,7 +128,13 @@ function BoardSelector({ user, onBack, onSelectBoard }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <motion.div 
+      className="min-h-screen bg-gray-900 text-gray-100"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Header - Retro Style */}
       <header className="bg-gray-300 border-b-2 border-gray-600 shadow-sm">
         <div className="flex items-center justify-between px-4 py-2">
@@ -386,7 +393,7 @@ function BoardSelector({ user, onBack, onSelectBoard }) {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }
 

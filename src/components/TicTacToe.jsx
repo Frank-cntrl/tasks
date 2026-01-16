@@ -3,6 +3,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import GridOnIcon from '@mui/icons-material/GridOn'
 import { authFetch } from '../utils/api'
 import Confetti from './Confetti'
+import { motion } from 'framer-motion'
 
 // Haptic feedback helper
 const triggerHaptic = (type = 'medium') => {
@@ -186,7 +187,13 @@ function TicTacToe({ user, onBack }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">
+    <motion.div 
+      className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Confetti */}
       <Confetti isActive={showConfetti} duration={4000} />
       
@@ -315,7 +322,7 @@ function TicTacToe({ user, onBack }) {
           </>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
 

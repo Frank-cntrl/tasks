@@ -7,6 +7,7 @@ import SpotifyActivity from './SpotifyActivity'
 import PostCard from './PostCard'
 import CreatePostModal from './CreatePostModal'
 import CommentsModal from './CommentsModal'
+import { motion } from 'framer-motion'
 
 function SpotifyShare({ user, onBack }) {
   const [posts, setPosts] = useState([])
@@ -96,7 +97,13 @@ function SpotifyShare({ user, onBack }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 pb-20">
+    <motion.div 
+      className="min-h-screen bg-gray-900 pb-20"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Header */}
       <header className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-4 shadow-lg">
         <div className="flex items-center gap-3">
@@ -188,7 +195,7 @@ function SpotifyShare({ user, onBack }) {
           onUpdate={fetchPosts}
         />
       )}
-    </div>
+    </motion.div>
   )
 }
 

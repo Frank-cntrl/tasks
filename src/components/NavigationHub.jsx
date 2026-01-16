@@ -5,6 +5,7 @@ import BrushIcon from '@mui/icons-material/Brush'
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
 import LogoutIcon from '@mui/icons-material/Logout'
 import FavoriteIcon from '@mui/icons-material/Favorite'
+import WineBarIcon from '@mui/icons-material/WineBar'
 
 const navigationItems = [
   {
@@ -41,6 +42,13 @@ const navigationItems = [
     icon: SportsEsportsIcon,
     enabled: true,
     color: 'from-pink-500 to-pink-600',
+  },
+  {
+    id: 'beverage',
+    name: 'Beverage Scan',
+    icon: WineBarIcon,
+    enabled: true,
+    color: 'from-purple-500 to-pink-500',
   },
 ]
 

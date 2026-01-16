@@ -3,6 +3,7 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
 import GridOnIcon from '@mui/icons-material/GridOn'
 import BrushIcon from '@mui/icons-material/Brush'
 import CasinoIcon from '@mui/icons-material/Casino'
+import { motion } from 'framer-motion'
 
 const games = [
   {
@@ -49,7 +50,13 @@ const games = [
 
 function GamesMenu({ onBack, onSelectGame }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-500 to-pink-600">
+    <motion.div 
+      className="min-h-screen bg-gradient-to-br from-pink-500 to-pink-600"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Header */}
       <header className="px-5 py-4">
         <div className="flex items-center gap-3">
@@ -111,7 +118,7 @@ function GamesMenu({ onBack, onSelectGame }) {
           })}
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
