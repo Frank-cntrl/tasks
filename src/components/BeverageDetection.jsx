@@ -25,14 +25,20 @@ function BeverageDetection({ user, onBack }) {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       })
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
+        
+        // Wait for video to be ready before showing
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().catch(console.error)
+        }
+        
         setCameraActive(true)
       }
     } catch (err) {
@@ -61,14 +67,17 @@ function BeverageDetection({ user, onBack }) {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { 
               facingMode: newFacingMode,
-              width: { ideal: 1920 },
-              height: { ideal: 1080 }
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
             }
           })
           
           if (videoRef.current) {
             videoRef.current.srcObject = stream
             streamRef.current = stream
+            videoRef.current.onloadedmetadata = () => {
+              videoRef.current.play().catch(console.error)
+            }
             setCameraActive(true)
           }
         } catch (err) {
