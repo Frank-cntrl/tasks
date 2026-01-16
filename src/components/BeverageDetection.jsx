@@ -22,21 +22,34 @@ function BeverageDetection({ user, onBack }) {
   const startCamera = async () => {
     try {
       setError('')
-      const stream = await navigator.mediaDevices.getUserMedia({
+      
+      // Request camera with constraints
+      const constraints = {
         video: { 
-          facingMode: facingMode,
+          facingMode: { ideal: facingMode },
           width: { ideal: 1280 },
           height: { ideal: 720 }
-        }
-      })
+        },
+        audio: false
+      }
+      
+      console.log('Requesting camera with constraints:', constraints)
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      
+      console.log('Got stream:', stream)
+      console.log('Video tracks:', stream.getVideoTracks())
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
         
-        // Wait for video to be ready before showing
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play().catch(console.error)
+        // For iOS Safari - must explicitly play
+        try {
+          await videoRef.current.play()
+          console.log('Video playing')
+        } catch (playErr) {
+          console.log('Autoplay blocked, waiting for user interaction:', playErr)
         }
         
         setCameraActive(true)
@@ -66,17 +79,20 @@ function BeverageDetection({ user, onBack }) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { 
-              facingMode: newFacingMode,
+              facingMode: { ideal: newFacingMode },
               width: { ideal: 1280 },
               height: { ideal: 720 }
-            }
+            },
+            audio: false
           })
           
           if (videoRef.current) {
             videoRef.current.srcObject = stream
             streamRef.current = stream
-            videoRef.current.onloadedmetadata = () => {
-              videoRef.current.play().catch(console.error)
+            try {
+              await videoRef.current.play()
+            } catch (e) {
+              console.log('Play error:', e)
             }
             setCameraActive(true)
           }
@@ -336,17 +352,25 @@ If you cannot identify a beverage in the image, return:
               Start Camera
             </button>
           </motion.div>
-        ) : cameraActive && !result ? (
-          // Camera View
-          <div className="space-y-4">
+        ) : null}
+        
+        {/* Camera View - always render when active, hide when showing result */}
+        {cameraActive && (
+          <div className={`space-y-4 ${result ? 'hidden' : ''}`}>
             {/* Video Stream */}
-            <div className="relative bg-black rounded-xl overflow-hidden">
+            <div className="relative bg-black rounded-xl overflow-hidden" style={{ minHeight: '400px' }}>
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className="w-full aspect-[3/4] object-cover"
+                webkit-playsinline="true"
+                style={{ 
+                  width: '100%', 
+                  height: '400px', 
+                  objectFit: 'cover',
+                  backgroundColor: '#000'
+                }}
               />
               
               {/* Camera Controls Overlay */}
@@ -415,7 +439,7 @@ If you cannot identify a beverage in the image, return:
               </button>
             </div>
           </div>
-        ) : null}
+        )}
 
         {/* Results */}
         {result && (
