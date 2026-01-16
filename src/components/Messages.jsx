@@ -23,14 +23,40 @@ function Messages({ user, onBack }) {
   const [imageFile, setImageFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [connectionError, setConnectionError] = useState(null)
+  const [viewportHeight, setViewportHeight] = useState('100dvh')
   
   const socketRef = useRef(null)
   const messagesEndRef = useRef(null)
   const typingTimeoutRef = useRef(null)
   const fileInputRef = useRef(null)
+  const containerRef = useRef(null)
 
   // Partner ID (since there are only 2 users)
   const partnerId = user.id === 1 ? 2 : 1
+
+  // Fix for mobile Safari viewport height on initial load
+  useEffect(() => {
+    const setHeight = () => {
+      const vh = window.innerHeight
+      setViewportHeight(`${vh}px`)
+    }
+    
+    // Set immediately
+    setHeight()
+    
+    // Also set after a short delay to handle Safari's delayed calculations
+    const timeout = setTimeout(setHeight, 100)
+    
+    // Update on resize/orientation change
+    window.addEventListener('resize', setHeight)
+    window.addEventListener('orientationchange', setHeight)
+    
+    return () => {
+      clearTimeout(timeout)
+      window.removeEventListener('resize', setHeight)
+      window.removeEventListener('orientationchange', setHeight)
+    }
+  }, [])
 
   useEffect(() => {
     fetchMessages()
@@ -280,7 +306,9 @@ function Messages({ user, onBack }) {
 
   return (
     <motion.div 
-      className="h-screen-safe bg-gray-900 flex flex-col overflow-hidden"
+      ref={containerRef}
+      className="bg-gray-900 flex flex-col overflow-hidden"
+      style={{ height: viewportHeight }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
