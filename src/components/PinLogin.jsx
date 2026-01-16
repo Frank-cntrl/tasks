@@ -188,14 +188,6 @@ function PinLogin({ onLogin }) {
                          touch-manipulation border border-white/10 hover:border-white/20"
                 whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.2)" }}
                 whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ 
-                  duration: 0.3, 
-                  delay: 0.6 + (index * 0.05),
-                  type: "spring",
-                  stiffness: 200
-                }}
               >
                 {num}
               </motion.button>
@@ -210,9 +202,6 @@ function PinLogin({ onLogin }) {
                        touch-manipulation border border-white/10 hover:border-white/20"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 1.05, type: "spring", stiffness: 200 }}
             >
               0
             </motion.button>
@@ -226,9 +215,6 @@ function PinLogin({ onLogin }) {
                        border border-red-400/20 hover:border-red-400/40"
               whileHover={{ scale: 1.05, rotate: -5 }}
               whileTap={{ scale: 0.95, rotate: 0 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 1.1, type: "spring", stiffness: 200 }}
             >
               <BackspaceIcon sx={{ fontSize: { xs: 20, md: 24 } }} />
             </motion.button>

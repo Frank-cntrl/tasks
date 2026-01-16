@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { API_URL } from '../config'
+import { authFetch } from '../utils/api'
 import CloseIcon from '@mui/icons-material/Close'
 import LockIcon from '@mui/icons-material/Lock'
 import PeopleIcon from '@mui/icons-material/People'
@@ -21,12 +21,8 @@ function AddListModal({ onClose, onListCreated, isShared }) {
     setError('')
 
     try {
-      const response = await fetch(`${API_URL}/api/todolists`, {
+      const response = await authFetch('/api/todolists', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),

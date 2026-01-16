@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import TodoList from './TodoList'
 import AddListModal from './AddListModal'
 import AddTaskModal from './AddTaskModal'
-import { API_URL } from '../config'
+import { authFetch } from '../utils/api'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import AddIcon from '@mui/icons-material/Add'
 import ChecklistIcon from '@mui/icons-material/Checklist'
@@ -22,9 +22,7 @@ function TodoApp({ user, onLogout, onBack }) {
 
   const fetchTodoLists = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/todolists`, {
-        credentials: 'include',
-      })
+      const response = await authFetch('/api/todolists')
       if (response.ok) {
         const data = await response.json()
         setTodolists(data)
@@ -61,12 +59,8 @@ function TodoApp({ user, onLogout, onBack }) {
 
   const handleTaskToggle = async (taskId, isCompleted) => {
     try {
-      await fetch(`${API_URL}/api/tasks/${taskId}`, {
+      await authFetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({ isCompleted: !isCompleted }),
       })
       await fetchTodoLists()
@@ -77,9 +71,8 @@ function TodoApp({ user, onLogout, onBack }) {
 
   const handleTaskDelete = async (taskId) => {
     try {
-      await fetch(`${API_URL}/api/tasks/${taskId}`, {
+      await authFetch(`/api/tasks/${taskId}`, {
         method: 'DELETE',
-        credentials: 'include',
       })
       await fetchTodoLists()
     } catch (error) {
@@ -90,9 +83,8 @@ function TodoApp({ user, onLogout, onBack }) {
   const handleListDelete = async (listId) => {
     if (window.confirm('Delete this list and all its tasks?')) {
       try {
-        await fetch(`${API_URL}/api/todolists/${listId}`, {
+        await authFetch(`/api/todolists/${listId}`, {
           method: 'DELETE',
-          credentials: 'include',
         })
         await fetchTodoLists()
       } catch (error) {

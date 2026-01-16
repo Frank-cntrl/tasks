@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { API_URL } from '../config'
+import { authFetch } from '../utils/api'
 import CloseIcon from '@mui/icons-material/Close'
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck'
 
@@ -22,12 +22,8 @@ function AddTaskModal({ list, onClose, onTaskCreated }) {
     setError('')
 
     try {
-      const response = await fetch(`${API_URL}/api/tasks`, {
+      const response = await authFetch('/api/tasks', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
