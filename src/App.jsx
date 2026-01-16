@@ -6,7 +6,8 @@ import SpotifyShare from './components/SpotifyShare/SpotifyShare'
 import Messages from './components/Messages'
 import BoardSelector from './components/BoardSelector'
 import CollaborativeBoard from './components/CollaborativeBoard'
-import GamesPlaceholder from './components/GamesPlaceholder'
+import GamesMenu from './components/GamesMenu'
+import TicTacToe from './components/TicTacToe'
 import { API_URL } from './config'
 import { authFetch, clearAuthToken } from './utils/api'
 
@@ -95,6 +96,14 @@ function App() {
     setCurrentView('boards')
   }
 
+  const handleSelectGame = (gameId) => {
+    setCurrentView(`game-${gameId}`)
+  }
+
+  const handleBackToGames = () => {
+    setCurrentView('games')
+  }
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-purple-900 pt-safe pb-safe">
@@ -143,7 +152,9 @@ function App() {
           />
         )
       case 'games':
-        return <GamesPlaceholder onBack={handleBackToHub} />
+        return <GamesMenu onBack={handleBackToHub} onSelectGame={handleSelectGame} />
+      case 'game-tictactoe':
+        return <TicTacToe user={user} onBack={handleBackToGames} />
       default:
         return (
           <NavigationHub 

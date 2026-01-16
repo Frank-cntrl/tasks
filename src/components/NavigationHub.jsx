@@ -40,7 +40,7 @@ const navigationItems = [
     id: 'games',
     name: 'Games',
     icon: SportsEsportsIcon,
-    enabled: false,
+    enabled: true,
     color: 'from-pink-500 to-pink-600',
   },
 ]
