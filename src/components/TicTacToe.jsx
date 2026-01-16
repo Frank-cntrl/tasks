@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import GridOnIcon from '@mui/icons-material/GridOn'
-import RefreshIcon from '@mui/icons-material/Refresh'
 import { authFetch } from '../utils/api'
 import Confetti from './Confetti'
 
@@ -192,31 +191,19 @@ function TicTacToe({ user, onBack }) {
       <Confetti isActive={showConfetti} duration={4000} />
       
       {/* Header */}
-      <header className="px-5 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="w-10 h-10 flex items-center justify-center rounded-xl 
-                       bg-white/20 hover:bg-white/30 text-white transition-all duration-200"
-            >
-              <ArrowBackIcon />
-            </button>
-            <div className="flex items-center gap-2 text-white">
-              <GridOnIcon />
-              <h1 className="text-xl font-bold">Tic Tac Toe</h1>
-            </div>
+      <header className="px-5 py-4 pt-safe">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="w-10 h-10 flex items-center justify-center rounded-xl 
+                     bg-white/20 hover:bg-white/30 text-white transition-all duration-200"
+          >
+            <ArrowBackIcon />
+          </button>
+          <div className="flex items-center gap-2 text-white">
+            <GridOnIcon />
+            <h1 className="text-xl font-bold">Tic Tac Toe</h1>
           </div>
-          {game && (
-            <button
-              onClick={startNewGame}
-              className="w-10 h-10 flex items-center justify-center rounded-xl 
-                       bg-white/20 hover:bg-white/30 text-white transition-all duration-200"
-              title="New Game"
-            >
-              <RefreshIcon />
-            </button>
-          )}
         </div>
       </header>
 
@@ -265,7 +252,7 @@ function TicTacToe({ user, onBack }) {
             </div>
 
             {/* Game Board */}
-            <div className="w-full max-w-sm aspect-square bg-white/10 rounded-2xl p-4 mb-6">
+            <div className="w-full max-w-xs mx-auto aspect-square bg-white/10 rounded-2xl p-3 mb-6">
               <div className="grid grid-cols-3 gap-2 h-full">
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(renderCell)}
               </div>
