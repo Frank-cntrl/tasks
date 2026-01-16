@@ -64,25 +64,25 @@ body {
 /* Safe area utilities - with minimum fallback values for iOS */
 /* iOS notch is approximately 47px, home indicator is ~34px */
 .pt-safe {
-  /* Use safe-area if available, otherwise assume iOS notch height */
-  padding-top: env(safe-area-inset-top, 47px);
+  /* Use safe-area + extra padding for breathing room */
+  padding-top: calc(env(safe-area-inset-top, 47px) + 8px);
 }
 
 /* Alternative with max for non-notch devices */
 @supports not (padding-top: env(safe-area-inset-top)) {
   .pt-safe {
-    padding-top: 20px; /* Fallback for non-iOS */
+    padding-top: 28px; /* Fallback for non-iOS */
   }
 }
 
 .pb-safe {
-  /* Use safe-area if available, otherwise assume home indicator height */
-  padding-bottom: env(safe-area-inset-bottom, 34px);
+  /* Use safe-area + extra padding for breathing room */
+  padding-bottom: calc(env(safe-area-inset-bottom, 34px) + 8px);
 }
 
 @supports not (padding-bottom: env(safe-area-inset-bottom)) {
   .pb-safe {
-    padding-bottom: 20px; /* Fallback for non-iOS */
+    padding-bottom: 28px; /* Fallback for non-iOS */
   }
 }
 
