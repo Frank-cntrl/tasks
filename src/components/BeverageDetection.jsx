@@ -1,19 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import CameraAltIcon from '@mui/icons-material/CameraAlt'
 import CameraIcon from '@mui/icons-material/Camera'
-import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid'
 import WineBarIcon from '@mui/icons-material/WineBar'
 import LocalBarIcon from '@mui/icons-material/LocalBar'
 import SportsBarIcon from '@mui/icons-material/SportsBar'
+import FlashOnIcon from '@mui/icons-material/FlashOn'
+import FlashOffIcon from '@mui/icons-material/FlashOff'
 import { motion } from 'framer-motion'
 
 function BeverageDetection({ user, onBack }) {
   const [cameraActive, setCameraActive] = useState(false)
-  const [facingMode, setFacingMode] = useState('environment') // back camera
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const [flashOn, setFlashOn] = useState(false)
   
   const videoRef = useRef(null)
   const streamRef = useRef(null)
@@ -26,7 +26,7 @@ function BeverageDetection({ user, onBack }) {
       // Request camera with constraints
       const constraints = {
         video: { 
-          facingMode: { ideal: facingMode },
+          facingMode: { ideal: 'environment' },
           width: { ideal: 1280 },
           height: { ideal: 720 }
         },
@@ -76,41 +76,33 @@ function BeverageDetection({ user, onBack }) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
+    setFlashOn(false)
     setCameraActive(false)
   }
 
-  const flipCamera = async () => {
-    const newFacingMode = facingMode === 'environment' ? 'user' : 'environment'
-    setFacingMode(newFacingMode)
+  const toggleFlash = async () => {
+    if (!streamRef.current) return
     
-    if (cameraActive) {
-      stopCamera()
-      // Small delay to ensure cleanup before restarting
-      setTimeout(async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { 
-              facingMode: { ideal: newFacingMode },
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            },
-            audio: false
-          })
-          
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream
-            streamRef.current = stream
-            try {
-              await videoRef.current.play()
-            } catch (e) {
-              console.log('Play error:', e)
-            }
-            setCameraActive(true)
-          }
-        } catch (err) {
-          setError('Unable to switch camera.')
-        }
-      }, 100)
+    const track = streamRef.current.getVideoTracks()[0]
+    if (!track) return
+    
+    try {
+      const capabilities = track.getCapabilities()
+      if (!capabilities.torch) {
+        setError('Flash not available on this device')
+        setTimeout(() => setError(''), 2000)
+        return
+      }
+      
+      const newFlashState = !flashOn
+      await track.applyConstraints({
+        advanced: [{ torch: newFlashState }]
+      })
+      setFlashOn(newFlashState)
+    } catch (err) {
+      console.error('Flash toggle error:', err)
+      setError('Could not toggle flash')
+      setTimeout(() => setError(''), 2000)
     }
   }
 
@@ -370,14 +362,6 @@ If you cannot identify a beverage in the image, return:
       </header>
 
       <div className="p-4 space-y-4">
-        {/* Debug info */}
-        <div className="bg-gray-800 text-xs text-gray-400 p-2 rounded font-mono">
-          cameraActive: {cameraActive ? 'true' : 'false'} | 
-          result: {result ? 'yes' : 'no'} | 
-          loading: {loading ? 'true' : 'false'} |
-          videoRef: {videoRef.current ? 'exists' : 'null'}
-        </div>
-
         {error && (
           <motion.div 
             className="bg-red-900/50 border border-red-500 text-red-200 p-3 rounded-lg"
@@ -465,12 +449,15 @@ If you cannot identify a beverage in the image, return:
             {/* Controls */}
             <div className="flex justify-center items-center gap-6">
               <button
-                onClick={flipCamera}
+                onClick={toggleFlash}
                 disabled={loading}
-                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded-full 
-                         flex items-center justify-center text-white transition-colors"
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors
+                         ${flashOn 
+                           ? 'bg-yellow-500 hover:bg-yellow-400 text-gray-900' 
+                           : 'bg-gray-700 hover:bg-gray-600 text-white'} 
+                         disabled:opacity-50`}
               >
-                <FlipCameraAndroidIcon />
+                {flashOn ? <FlashOnIcon /> : <FlashOffIcon />}
               </button>
               
               <button
@@ -502,10 +489,30 @@ If you cannot identify a beverage in the image, return:
         {/* Results */}
         {result && (
           <motion.div 
-            className="space-y-4"
+            className="fixed inset-0 bg-gray-900 z-50 overflow-hidden flex flex-col"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
+            {/* Fixed Header */}
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-5 py-4 shadow-lg flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setResult(null)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl 
+                           bg-white/20 hover:bg-white/30 transition-all duration-200"
+                >
+                  <ArrowBackIcon />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-lg font-bold truncate">{result.name}</h1>
+                  <p className="text-white/70 text-sm truncate">{result.type}</p>
+                </div>
+                {getBeverageIcon(result.type)}
+              </div>
+            </div>
+            
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
             {/* Header Card */}
             <div className="bg-gradient-to-br from-purple-900/80 to-pink-900/80 rounded-xl p-5 border border-purple-500/30">
               <div className="flex items-start gap-4">
@@ -604,34 +611,37 @@ If you cannot identify a beverage in the image, return:
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setResult(null)
-                  startCamera()
-                }}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 
-                         hover:from-purple-500 hover:to-pink-500 text-white py-3 
-                         rounded-xl font-medium transition-all active:scale-[0.98]"
-              >
-                Scan Another
-              </button>
-              <button
-                onClick={() => setResult(null)}
-                className="px-6 bg-gray-700 hover:bg-gray-600 text-white py-3 
-                         rounded-xl font-medium transition-colors"
-              >
-                Done
-              </button>
-            </div>
-
             {/* Confidence indicator */}
             {result.confidence && (
-              <p className="text-center text-xs text-gray-500">
+              <p className="text-center text-xs text-gray-500 pt-2">
                 AI Confidence: {(result.confidence * 100).toFixed(0)}%
               </p>
             )}
+            </div>
+            
+            {/* Fixed Bottom Actions */}
+            <div className="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 p-4 pb-safe">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setResult(null)
+                    startCamera()
+                  }}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 
+                           hover:from-purple-500 hover:to-pink-500 text-white py-3 
+                           rounded-xl font-medium transition-all active:scale-[0.98]"
+                >
+                  Scan Another
+                </button>
+                <button
+                  onClick={() => setResult(null)}
+                  className="px-6 bg-gray-700 hover:bg-gray-600 text-white py-3 
+                           rounded-xl font-medium transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
       </div>
