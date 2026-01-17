@@ -109,6 +109,19 @@ function BeverageDetection({ user, onBack }) {
   const captureImage = async () => {
     if (!videoRef.current || !canvasRef.current) return
     
+    // Turn off flash before capturing
+    if (flashOn && streamRef.current) {
+      const track = streamRef.current.getVideoTracks()[0]
+      if (track) {
+        try {
+          await track.applyConstraints({ advanced: [{ torch: false }] })
+          setFlashOn(false)
+        } catch (e) {
+          console.log('Could not turn off flash:', e)
+        }
+      }
+    }
+    
     setLoading(true)
     setError('')
     
@@ -154,45 +167,21 @@ function BeverageDetection({ user, onBack }) {
     const base64 = await blobToBase64(imageBlob)
     const base64Data = base64.split(',')[1] // Remove data:image/jpeg;base64, prefix
     
-    const prompt = `
-Analyze this beverage label image and provide detailed information.
+    const prompt = `You are a beverage analysis assistant. Analyze this beverage label image.
 
-Identify:
-- Beverage name and brand
-- Type (wine/beer/spirits) and style
-- Region/origin
-- Grape varieties or ingredients
-- Vintage year if visible
-- Alcohol content if visible
+RULES - YOU MUST FOLLOW THESE EXACTLY:
+1. Return ONLY raw JSON - no markdown, no code blocks, no backticks, no explanation
+2. Use ONLY the exact field names shown below - do not add any extra fields
+3. ALL values must be simple strings or a flat array of strings - NO nested objects
+4. If any information is not visible or unknown, use "N/A" as the value
+5. The grapes and foodPairing arrays should contain simple strings only
+6. Do not include any text before or after the JSON
 
-Provide:
-- Detailed flavor profile and tasting notes
-- Food pairing recommendations (at least 4 suggestions)
-- Serving temperature
-- Brief background about the producer
-- Approximate price range
+RETURN THIS EXACT JSON STRUCTURE:
+{"name":"beverage name here","type":"wine/beer/spirits and style","region":"origin location or N/A","grapes":["grape1","grape2"],"vintage":"year or N/A","alcohol":"percentage or N/A","flavorProfile":"tasting notes description","foodPairing":["food1","food2","food3","food4"],"servingTemp":"temperature or N/A","background":"producer info or N/A","priceRange":"price range or N/A","confidence":0.85}
 
-Return ONLY valid JSON with this exact structure (no markdown, no code blocks):
-{
-  "name": "beverage name",
-  "type": "category and style",
-  "region": "origin location",
-  "grapes": ["grape1", "grape2"],
-  "vintage": "year or N/A",
-  "alcohol": "percentage",
-  "flavorProfile": "detailed description",
-  "foodPairing": ["food1", "food2", "food3", "food4"],
-  "servingTemp": "temperature range",
-  "background": "producer info",
-  "priceRange": "$X-Y",
-  "confidence": 0.85
-}
-
-If you cannot identify a beverage in the image, return:
-{
-  "error": "No beverage label detected",
-  "suggestion": "Please point the camera at a wine, beer, or spirits bottle label"
-}
+If no beverage is detected:
+{"error":"No beverage label detected","suggestion":"Please point the camera at a wine, beer, or spirits bottle label"}
 `
 
     try {
