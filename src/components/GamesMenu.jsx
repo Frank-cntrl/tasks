@@ -16,9 +16,9 @@ const games = [
   },
   {
     id: 'drawing',
-    name: 'Guess My Drawing',
+    name: 'Guess My Thing',
     icon: BrushIcon,
-    enabled: false,
+    enabled: true,
     color: 'from-yellow-500 to-orange-500',
     description: 'Draw and guess together',
   },

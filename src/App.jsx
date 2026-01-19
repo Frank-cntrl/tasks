@@ -8,7 +8,9 @@ import BoardSelector from './components/BoardSelector'
 import CollaborativeBoard from './components/CollaborativeBoard'
 import GamesMenu from './components/GamesMenu'
 import TicTacToe from './components/TicTacToe'
+import GuessMyThing from './components/GuessMyThing'
 import BeverageDetection from './components/BeverageDetection'
+import CoinFlip from './components/CoinFlip'
 import { API_URL } from './config'
 import { authFetch, clearAuthToken } from './utils/api'
 
@@ -156,8 +158,12 @@ function App() {
         return <GamesMenu onBack={handleBackToHub} onSelectGame={handleSelectGame} />
       case 'game-tictactoe':
         return <TicTacToe user={user} onBack={handleBackToGames} />
+      case 'game-drawing':
+        return <GuessMyThing user={user} onBack={handleBackToGames} />
       case 'beverage':
         return <BeverageDetection user={user} onBack={handleBackToHub} />
+      case 'coinflip':
+        return <CoinFlip onBack={handleBackToHub} />
       default:
         return (
           <NavigationHub 

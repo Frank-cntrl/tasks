@@ -6,6 +6,7 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
 import LogoutIcon from '@mui/icons-material/Logout'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import WineBarIcon from '@mui/icons-material/WineBar'
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
 
 const navigationItems = [
   {
@@ -49,6 +50,13 @@ const navigationItems = [
     icon: WineBarIcon,
     enabled: true,
     color: 'from-purple-500 to-pink-500',
+  },
+  {
+    id: 'coinflip',
+    name: 'Coin Flip',
+    icon: MonetizationOnIcon,
+    enabled: true,
+    color: 'from-yellow-500 to-amber-600',
   },
 ]
 
