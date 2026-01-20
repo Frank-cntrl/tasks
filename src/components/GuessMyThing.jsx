@@ -59,6 +59,7 @@ function GuessMyThing({ user, onBack }) {
   const [guess, setGuess] = useState('')
   const [guessHistory, setGuessHistory] = useState([])
   const [gameResult, setGameResult] = useState(null)
+  const [revealedWord, setRevealedWord] = useState(null) // The word to reveal at end of round
   const [isConnected, setIsConnected] = useState(false)
   const [opponentConnected, setOpponentConnected] = useState(false)
   const [opponentDrawing, setOpponentDrawing] = useState(null)
@@ -168,6 +169,7 @@ function GuessMyThing({ user, onBack }) {
             setGuessHistory([])
             setGuess('')
             setGameResult(null)
+            setRevealedWord(null) // Reset revealed word for new game
             setWaitingForRematch(false)
             setRematchReady({ me: false, opponent: false })
             setOpponentDrawing(null)
@@ -185,6 +187,13 @@ function GuessMyThing({ user, onBack }) {
               setGuess('')
             }
             startTimer(timeLeft)
+          })
+
+          // Handle round timeout - no one guessed correctly
+          newSocket.on('round-timeout', ({ opponentWord }) => {
+            console.log('🎮 Round timeout, opponent word was:', opponentWord)
+            setGameResult('Time\'s up! No one guessed it.')
+            setRevealedWord(opponentWord)
           })
 
           newSocket.on('drawing-updated', (drawingData) => {
@@ -216,11 +225,14 @@ function GuessMyThing({ user, onBack }) {
             }
           })
 
-          newSocket.on('guess-result', ({ correct, guess: guessText, winner }) => {
-            if (correct && winner === user.id) {
+          newSocket.on('guess-result', ({ correct, guess: guessText, winner, word }) => {
+            // Convert to strings for comparison to avoid type mismatch issues
+            if (correct && String(winner) === String(user.id)) {
               setGameResult('You guessed it!')
-            } else if (correct && winner !== user.id) {
+              setRevealedWord(word) // Show the word you guessed
+            } else if (correct && String(winner) !== String(user.id)) {
               setGameResult('Opponent guessed it!')
+              setRevealedWord(word) // Show what the word was
             } else {
               setGuessHistory(prev => [...prev, { text: guessText, correct: false }])
             }
@@ -585,6 +597,14 @@ function GuessMyThing({ user, onBack }) {
             <div className="bg-white rounded-2xl p-8 text-center mx-4" onClick={(e) => e.stopPropagation()}>
               <h2 className="text-2xl font-bold mb-4">{gameResult}</h2>
               
+              {/* Show the revealed word */}
+              {revealedWord && (
+                <div className="mb-4 p-3 bg-orange-100 rounded-lg">
+                  <p className="text-sm text-orange-600">The word was:</p>
+                  <p className="text-xl font-bold text-orange-700 uppercase">{revealedWord}</p>
+                </div>
+              )}
+              
               {!waitingForRematch ? (
                 <button
                   onClick={() => {
@@ -615,9 +635,12 @@ function GuessMyThing({ user, onBack }) {
               
               <button
                 onClick={() => {
+                  // Leave the game room and go back to games menu
+                  socket?.emit('leave_guessmything')
                   setGameResult(null)
                   setWaitingForRematch(false)
                   setRematchReady({ me: false, opponent: false })
+                  onBack()
                 }}
                 className="mt-4 text-gray-500 hover:text-gray-700 text-sm underline block mx-auto"
               >
